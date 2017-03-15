@@ -9,6 +9,7 @@ set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDEBUG=1" )
 add_library(dirtycopy SHARED
     src/main/cpp/native-lib.cpp
     src/main/cpp/dirty_copy.c
+    src/main/cpp/elf_parser.c
     )
 
 target_link_libraries(dirtycopy

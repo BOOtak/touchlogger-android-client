@@ -6,42 +6,34 @@
 #define TOUCHLOGGER_DIRTY_ELF_PARSER_H
 
 #include <sys/types.h>
+#include <linux/elf.h>
 
-struct elf_header {
-  char raw_data[16];
-  uint16_t e_type;
-  uint16_t e_machine;
-  uint32_t e_version;
-  uint32_t e_entry;
-  uint32_t e_phoff;
-  uint32_t e_shoff;
-  uint32_t e_flags;
-  uint16_t e_ehsize;
-  uint16_t e_phentsize;
-  uint16_t e_phnum;
-  uint16_t e_shentsize;
-  uint16_t e_shnum;
-  uint16_t e_shstrnd;
+struct needed_info
+{
+  int size;
+  unsigned long* addr;
 };
 
 struct dyn_info {
-  unsigned long str_table_addr;
-  unsigned long dependency_offset_addr;
-  unsigned long llibname_offset_addr;
+  unsigned long DT_STRTAB_addr;
+  unsigned long DT_SONAME_addr;
+  struct needed_info DT_NEEDED_addrs;
 };
 
-struct elf32_phdr {
-  int p_type;
-  int p_offset;
-  int p_vaddr;
-  int p_paddr;
-  int p_filesz;
-  int p_memsz;
-  int p_flags;
-  int p_align;
+struct strtab_entry
+{
+  unsigned long* type;
+  char* value;
 };
 
-signed int get_elf_info(struct elf_header *elf_mmaped_area, struct dyn_info *a2);
+struct dependencies_info
+{
+  int size;
+  struct strtab_entry* entries;
+};
 
+int get_elf_info(struct elf32_hdr *header, struct dyn_info *info);
+
+int get_strtable_values(void* elf_mmaped_data, struct dependencies_info* dependencies, struct strtab_entry* soname);
 
 #endif //TOUCHLOGGER_DIRTY_ELF_PARSER_H

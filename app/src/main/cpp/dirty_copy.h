@@ -30,3 +30,13 @@
 extern "C"
 #endif
 int dirty_copy(const char* src_path, const char* dst_path);
+
+#ifdef __cplusplus
+extern "C"
+#endif
+int copy_file(const char* src_path, const char* dst_path);
+
+#ifdef __cplusplus
+extern "C"
+#endif
+int inject_dependency_into_library(const char *path, const char *dependency_name);

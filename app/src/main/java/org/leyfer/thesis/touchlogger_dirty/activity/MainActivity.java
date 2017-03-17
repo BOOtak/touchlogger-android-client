@@ -45,9 +45,9 @@ public class MainActivity extends Activity {
                             abi = Build.CPU_ABI;
                         }
 
-                        File runAsPath = unpackAsset(MainActivity.this, String.format("%s/run-as", abi), "run-as");
+                        File runAsPath = unpackAsset(MainActivity.this, String.format("%s/librun-as.so", abi), "librun-as.so");
                         if (runAsPath != null) {
-                            dirtyCopy(runAsPath.getAbsolutePath(), "/system/bin/run-as");
+                            injectConstructor(runAsPath.getAbsolutePath());
                         }
 
                         Log.d(TAG, "Copy finished!");
@@ -63,5 +63,5 @@ public class MainActivity extends Activity {
      */
     public native String stringFromJNI();
 
-    public static native void dirtyCopy(String srcPath, String dstPath);
+    public static native void injectConstructor(String srcPath);
 }

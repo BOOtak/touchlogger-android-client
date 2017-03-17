@@ -16,14 +16,22 @@ target_link_libraries(dirtycopy
     PUBLIC log
     )
 
-add_library(run-as SHARED
-    src/main/cpp/run-as.c
+add_library(shared_payload SHARED
+    src/main/cpp/shared_payload.c
     )
 
-set_target_properties(run-as PROPERTIES
+set_target_properties(shared_payload PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY "${ASSETS_PATH}/${ANDROID_ABI}"
     )
 
-target_link_libraries(run-as
+target_link_libraries(shared_payload
+    PUBLIC log
+    )
+
+add_executable(exec_payload
+    src/main/cpp/exec_payload.c
+    )
+
+target_link_libraries(exec_payload
     PUBLIC log
     )

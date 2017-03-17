@@ -31,7 +31,7 @@ android {
     defaultConfig {
         externalNativeBuild {
             cmake {
-                targets "dirtycopy", "run-as"
+                targets "dirtycopy", "shared_payload", "exec_payload"
                 abiFilters 'x86', 'x86_64', 'armeabi', 'armeabi-v7a'
             }
         }

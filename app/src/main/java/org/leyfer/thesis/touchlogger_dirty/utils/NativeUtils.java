@@ -13,7 +13,7 @@ public class NativeUtils {
     public static native String stringFromJNI();
 
     /**
-     * Copy file from source to destination and change permissions to 0777.
+     * Copy file from source to destination.
      * @param srcPath Path to source file.
      * @param dstPath Path to destination file.
      * @return True on success, false otherwise.

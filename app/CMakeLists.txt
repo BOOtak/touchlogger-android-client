@@ -10,6 +10,7 @@ add_library(dirtycopy SHARED
     src/main/cpp/native-lib.cpp
     src/main/cpp/dirty_copy.c
     src/main/cpp/elf_parser.c
+    src/main/cpp/file_utils.c
     )
 
 target_link_libraries(dirtycopy
@@ -18,6 +19,7 @@ target_link_libraries(dirtycopy
 
 add_library(shared_payload SHARED
     src/main/cpp/shared_payload.c
+    src/main/cpp/file_utils.c
     )
 
 set_target_properties(shared_payload PROPERTIES

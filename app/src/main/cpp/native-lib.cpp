@@ -2,6 +2,7 @@
 #include <string>
 
 #include "dirty_copy.h"
+#include "file_utils.h"
 
 JNIEXPORT jboolean JNICALL
 Java_org_leyfer_thesis_touchlogger_1dirty_utils_NativeUtils_nativeCopy(JNIEnv *env, jclass type,

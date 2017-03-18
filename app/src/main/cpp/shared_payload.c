@@ -12,6 +12,7 @@
 #ifdef DEBUG
 
 #include <android/log.h>
+#include <fcntl.h>
 
 #define LOGV(...) { __android_log_print(ANDROID_LOG_INFO, "dirty_load", __VA_ARGS__); printf(__VA_ARGS__); printf("\n"); fflush(stdout); }
 #else
@@ -79,7 +80,18 @@ __attribute__((constructor)) void say_hello()
         getcon_t *getcon_p = (getcon_t *) getcon;
         char *secontext;
         int ret = (*getcon_p)(&secontext);
-        LOGV("%d %s", ret, secontext);
+        LOGV("current context: %d %s", ret, secontext);
+
+        int data_fd = open("/data/data/org.leyfer.thesis.touchlogger_dirty/files/libshared_payload.so", O_RDONLY);
+        if (data_fd == -1)
+        {
+          LOGV("Unable to open libshared_payload.so for reading: %s", strerror(errno));
+        }
+        else
+        {
+          LOGV("Open libshared_payload.so success!");
+        }
+
         void *setcon = dlsym(selinux, "setcon");
         const char *error = dlerror();
         if (error)

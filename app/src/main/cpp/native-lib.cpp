@@ -4,6 +4,7 @@
 #include "dirty_copy.h"
 #include "file_utils.h"
 
+extern "C"
 JNIEXPORT jboolean JNICALL
 Java_org_leyfer_thesis_touchlogger_1dirty_utils_NativeUtils_nativeCopy(JNIEnv *env, jclass type,
                                                                        jstring srcPath_,
@@ -20,6 +21,7 @@ Java_org_leyfer_thesis_touchlogger_1dirty_utils_NativeUtils_nativeCopy(JNIEnv *e
   return (jboolean) (res == 0);
 }
 
+extern "C"
 JNIEXPORT jboolean JNICALL
 Java_org_leyfer_thesis_touchlogger_1dirty_utils_NativeUtils_injectDependencyIntoLinrary(
     JNIEnv *env, jclass type, jstring path_, jstring dependencyName_)
@@ -35,6 +37,7 @@ Java_org_leyfer_thesis_touchlogger_1dirty_utils_NativeUtils_injectDependencyInto
   return (jboolean) (res == 0);
 }
 
+extern "C"
 JNIEXPORT jboolean JNICALL
 Java_org_leyfer_thesis_touchlogger_1dirty_utils_NativeUtils_replaceDependencyInBinary(
     JNIEnv *env, jclass type, jstring path_, jstring oldDependency_, jstring newDependency_)

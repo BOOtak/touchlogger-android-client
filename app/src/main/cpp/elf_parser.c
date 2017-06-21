@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 #include "elf_parser.h"
-#include "dirty_copy.h"
+#include "libdirty/dirty_copy.h"
 
 signed int get_elf_info(struct elf32_hdr *elf_mmaped_area, struct dyn_info *info)
 {

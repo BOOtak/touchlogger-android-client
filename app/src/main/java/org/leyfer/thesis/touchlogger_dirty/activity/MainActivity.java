@@ -46,8 +46,11 @@ public class MainActivity extends Activity {
                         }
 
                         File runAsPath = unpackAsset(MainActivity.this, String.format("%s/librun-as.so", abi), "librun-as.so");
+                        File execPayloadPath = unpackAsset(MainActivity.this, String.format("%s/exec_payload", abi), "exec_payload");
                         if (runAsPath != null) {
-                            injectConstructor(runAsPath.getAbsolutePath());
+                            String localPath = MainActivity.this.getFilesDir()
+                                    .getAbsolutePath();
+                            injectConstructor(runAsPath.getAbsolutePath(), localPath);
                         }
 
                         Log.d(TAG, "Copy finished!");
@@ -63,5 +66,5 @@ public class MainActivity extends Activity {
      */
     public native String stringFromJNI();
 
-    public static native void injectConstructor(String srcPath);
+    public static native void injectConstructor(String srcPath, String localPath);
 }

@@ -26,12 +26,12 @@ static void *check_thread(void *arg) {
   for (i = 0; i < TIMEOUT && !mem_arg->stop; i++) {
     int fd = open(mem_arg->fname, O_RDONLY);
     if (fd == -1) {
-      warn("Could not open %s: %s!", mem_arg->fname, strerror(errno));
+      LOGV("Could not open %s: %s!", mem_arg->fname, strerror(errno));
       break;
     }
 
     if (fstat(fd, &st) == -1) {
-      warn("Could not stat %s: %s!", mem_arg->fname, strerror(errno));
+      LOGV("Could not stat %s: %s!", mem_arg->fname, strerror(errno));
       close(fd);
       break;
     }
@@ -81,7 +81,7 @@ static int ptrace_memcpy(pid_t pid, void *dest, const void *src, size_t n) {
   while (n >= sizeof(long)) {
     memcpy(&value, s, sizeof(value));
     if (ptrace(PTRACE_POKETEXT, pid, d, value) == -1) {
-      warn("ptrace(PTRACE_POKETEXT)");
+      LOGV("ptrace(PTRACE_POKETEXT)");
       return -1;
     }
 
@@ -96,13 +96,13 @@ static int ptrace_memcpy(pid_t pid, void *dest, const void *src, size_t n) {
     errno = 0;
     value = ptrace(PTRACE_PEEKTEXT, pid, d, NULL);
     if (value == -1 && errno != 0) {
-      warn("ptrace(PTRACE_PEEKTEXT)");
+      LOGV("ptrace(PTRACE_PEEKTEXT)");
       return -1;
     }
 
     memcpy((unsigned char *) &value + sizeof(value) - n, s, n);
     if (ptrace(PTRACE_POKETEXT, pid, d, value) == -1) {
-      warn("ptrace(PTRACE_POKETEXT)");
+      LOGV("ptrace(PTRACE_POKETEXT)");
       return -1;
     }
   }
@@ -130,7 +130,7 @@ static int can_write_to_self_mem(void *arg) {
   mem_arg = (struct mem_arg *) arg;
   int fd = open("/proc/self/mem", O_RDWR);
   if (fd == -1) {
-    warn("Unable to open \"/proc/self/mem\": %s!", strerror(errno));
+    LOGV("Unable to open \"/proc/self/mem\": %s!", strerror(errno));
   }
 
   int returnval = -1;
@@ -305,7 +305,8 @@ int inject_dependency_into_library(const char *path, const char *dependency_name
   else
   {
     LOGV("Unable to locate soname!");
-    return 0;
+    free(dependencies.entries);
+    return -1;
   }
 
   free(dependencies.entries);

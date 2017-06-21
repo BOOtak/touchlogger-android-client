@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Touchlogger-dirty</string>
+    <string name="started_by_payload">Started by payload!</string>
+    <string name="restart_zygote_dialog_message">To continue TouchLogger activation system server should be rastarted. Restart system server?</string>
+    <string name="alert_title">TouchLogger Activation</string>
+    <string name="restart">Restart</string>
+    <string name="rollback">Rollback changes</string>
+    <string name="ok">OK</string>
+    <string name="inject_error_msg">Unable to inject dependency into system library!</string>
+    <string name="restart_zygote_msg">Rstarting zygote...</string>
+    <string name="restart_zygote_error_msg">Unable to restart zygote!</string>
 </resources>

@@ -14,9 +14,6 @@ import java.io.InputStream;
 public class FileUtils {
     public static File unpackAsset(Context context, String assetName, String targetName) {
         File targetFile = new File(context.getFilesDir().getAbsoluteFile(), targetName);
-        if (targetFile.exists()) {
-            return targetFile;
-        }
 
         InputStream assetInputStream = null;
         FileOutputStream targetOutputStream = null;

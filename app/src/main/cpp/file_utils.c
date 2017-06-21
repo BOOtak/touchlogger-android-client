@@ -40,5 +40,12 @@ int copy_file(const char* src_path, const char* dst_path)
 
   close(src_fd);
   close(dst_fd);
+
+  if (chmod(dst_path, 0777) != 0)
+  {
+    LOGV("Unable to chmod %s: %s!", dst_path, strerror(errno));
+    return -1;
+  }
+
   return 0;
 }

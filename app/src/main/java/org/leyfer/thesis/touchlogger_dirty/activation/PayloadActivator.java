@@ -29,11 +29,11 @@ public class PayloadActivator {
 
     private Map<String, String> backupPaths = new HashMap<>();
 
-    public static PayloadActivator getInstance() {
-        return ourInstance;
+    private PayloadActivator() {
     }
 
-    private PayloadActivator() {
+    public static PayloadActivator getInstance() {
+        return ourInstance;
     }
 
     private void assertLocalPath() {
@@ -85,13 +85,10 @@ public class PayloadActivator {
 
                 // FIXME: REMOVE BEFORE PRODUCTION CODE!!!
                 // <ONLY FOR TESTING!>
-                if (!JNIAPI.replaceDependencyInBinary(TARGET_INJECTED_PATH, "libutils.so", "libmtp.so" ))
-                {
+                if (!JNIAPI.replaceDependencyInBinary(TARGET_INJECTED_PATH, "libutils.so", TARGET_LIBRARY_NAME)) {
                     Log.d(MainActivity.TAG, "Unable to replace dependency!");
                     return false;
-                }
-                else
-                {
+                } else {
                     Log.d(MainActivity.TAG, "Dependency replaced successfully!");
                     return true;
                 }

@@ -14,6 +14,7 @@ public class JNIAPI {
 
     /**
      * Copy file from source to destination.
+     *
      * @param srcPath Path to source file.
      * @param dstPath Path to destination file.
      * @return True on success, false otherwise.
@@ -29,6 +30,7 @@ public class JNIAPI {
      * WARNING! On some rare occasions this (and following) method may cause PERMANENT file changes.
      * I.e. files will stay same AFTER REBOOT. Mechanism of such behaviour is unknown. Remember to
      * restore all file contents when you're done playing with exploits.
+     *
      * @param srcPath Path to replacement.
      * @param dstPath Path to file to be replaced.
      * @return True on success, false otherwise.
@@ -39,7 +41,8 @@ public class JNIAPI {
      * Add new dependency to shared library. This is done via parsing ELF file and replacing
      * SONAME section with DT_NEEDED with new name. This works only for shared libraries and wont
      * work for executables as they don't contain SONAME section.
-     * @param path Path to library to inject dependency to.
+     *
+     * @param path           Path to library to inject dependency to.
      * @param dependencyName Name of new dependency.
      * @return True on success, false otherwise.
      */
@@ -48,7 +51,8 @@ public class JNIAPI {
     /**
      * Replace one dependency in ELF file. This works through replacing DT_NEEDED value in ELF file
      * with given in arguments. This method works either for both shared libraries and executables.
-     * @param path Path to ELF file.
+     *
+     * @param path          Path to ELF file.
      * @param oldDependency Name of dependency to be replaced.
      * @param newDependency Name of new dependency.
      * @return True on success, false otherwise.

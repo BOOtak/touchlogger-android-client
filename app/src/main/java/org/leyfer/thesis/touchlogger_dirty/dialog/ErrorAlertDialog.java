@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 
 import org.leyfer.thesis.touchlogger_dirty.R;
-import org.leyfer.thesis.touchlogger_dirty.activation.PayloadActivator;
 
 /**
  * Created by kirill on 19.03.17.

@@ -3,7 +3,6 @@ package org.leyfer.thesis.touchlogger_dirty.dialog;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.res.Resources;
 import android.os.Handler;
 
 import org.leyfer.thesis.touchlogger_dirty.R;

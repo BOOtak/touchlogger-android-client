@@ -9,4 +9,5 @@
     <string name="inject_error_msg">Unable to inject dependency into system library!</string>
     <string name="restart_zygote_msg">Rstarting zygote...</string>
     <string name="restart_zygote_error_msg">Unable to restart zygote!</string>
+    <string name="button_action_text">Make Some Fun!</string>
 </resources>

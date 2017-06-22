@@ -21,10 +21,6 @@
             </intent-filter>
         </activity>
 
-        <service
-            android:name=".service.CommandsExecutionService"
-            android:exported="false">
-        </service>
     </application>
 
 </manifest>

@@ -21,13 +21,14 @@ int copy_file(const char* src_path, const char* dst_path)
   }
 
   int bufsize = 4096;
-  void* buf = (void*)malloc(bufsize);
+  void* buf = (void*) malloc(bufsize);
   int readed = 0;
-  do {
+  do
+  {
     readed = read(src_fd, buf, bufsize);
     if (readed > 0)
     {
-      int written = write (dst_fd, buf, readed);
+      int written = write(dst_fd, buf, readed);
       LOGV("written %d", written);
       if (written == -1)
       {
@@ -37,7 +38,7 @@ int copy_file(const char* src_path, const char* dst_path)
     }
 
     LOGV("%d readed", readed);
-  } while(readed > 0);
+  } while (readed > 0);
 
   close(src_fd);
   close(dst_fd);
@@ -46,7 +47,8 @@ int copy_file(const char* src_path, const char* dst_path)
 
 int copy_file_with_mode(const char* src_path, const char* dst_path, int mode)
 {
-  if (copy_file(src_path, dst_path) == -1) {
+  if (copy_file(src_path, dst_path) == -1)
+  {
     LOGV("Unable to copy file!");
     return -1;
   }

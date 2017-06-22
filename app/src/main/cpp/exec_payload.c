@@ -7,11 +7,10 @@
 #include <unistd.h>
 #include <dlfcn.h>
 #include <stdlib.h>
-#include <stdbool.h>
 
 #include "dirty_copy.h"
 
-typedef int getcon_t(char **con);
+typedef int getcon_t(char** con);
 
 // TODO: make this depend on project build type
 #define PRODUCTION_CODE 0
@@ -28,20 +27,20 @@ int main(int argc, const char** argv)
 #ifdef __aarch64__
   void * selinux = dlopen("/system/lib64/libselinux.so", RTLD_LAZY);
 #else
-  void *selinux = dlopen("/system/lib/libselinux.so", RTLD_LAZY);
+  void* selinux = dlopen("/system/lib/libselinux.so", RTLD_LAZY);
 #endif
   if (selinux)
   {
-    void *getcon = dlsym(selinux, "getcon");
-    const char *error = dlerror();
+    void* getcon = dlsym(selinux, "getcon");
+    const char* error = dlerror();
     if (error)
     {
       LOGV("dlsym error %s", error);
     }
     else
     {
-      getcon_t *getcon_p = (getcon_t *) getcon;
-      char *secontext;
+      getcon_t* getcon_p = (getcon_t*) getcon;
+      char* secontext;
       int ret = (*getcon_p)(&secontext);
       LOGV("Context: %d %s", ret, secontext);
     }
@@ -52,7 +51,7 @@ int main(int argc, const char** argv)
     LOGV("Unable to daemonize process: %s!", strerror(errno));
   }
 
-#ifdef PRODUCTION_CODE
+#if PRODUCTION_CODE
   bool called_activity = false;
 #endif
 

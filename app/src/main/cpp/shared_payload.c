@@ -152,7 +152,9 @@ __attribute__((constructor)) void say_hello()
       if (daemon(0, 0) == -1)
       {
         LOGV("Unable to daemonize process: %s!", strerror(errno));
-      } else {
+      }
+      else
+      {
         LOGV("Run shared_payload as daemon!");
       }
 

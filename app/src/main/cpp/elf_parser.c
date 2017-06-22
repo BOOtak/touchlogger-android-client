@@ -7,9 +7,9 @@
 #include "elf_parser.h"
 #include "dirty_copy.h"
 
-signed int get_elf_info(struct elf32_hdr *elf_mmaped_area, struct dyn_info *info)
+signed int get_elf_info(struct elf32_hdr* elf_mmaped_area, struct dyn_info* info)
 {
-  struct elf32_phdr *programm_header_entry;
+  struct elf32_phdr* programm_header_entry;
   int ph;
   unsigned long segment_addr;
   unsigned int i;
@@ -19,7 +19,7 @@ signed int get_elf_info(struct elf32_hdr *elf_mmaped_area, struct dyn_info *info
       && elf_mmaped_area->e_ident[2] == ELFMAG2
       && elf_mmaped_area->e_ident[3] == ELFMAG3)
   {
-    programm_header_entry = (struct elf32_phdr *) &elf_mmaped_area->e_ident[elf_mmaped_area->e_phoff];
+    programm_header_entry = (struct elf32_phdr*) &elf_mmaped_area->e_ident[elf_mmaped_area->e_phoff];
     ph = 0;
     while (ph < elf_mmaped_area->e_phnum)
     {
@@ -33,7 +33,7 @@ signed int get_elf_info(struct elf32_hdr *elf_mmaped_area, struct dyn_info *info
         i = 0;
         int found = 0;
         info->DT_NEEDED_addrs.size = programm_header_entry->p_filesz >> 3;
-        info->DT_NEEDED_addrs.addr = (unsigned long *) malloc(
+        info->DT_NEEDED_addrs.addr = (unsigned long*) malloc(
             sizeof(unsigned long) * programm_header_entry->p_filesz >> 3);
         LOGV("%d entries", programm_header_entry->p_filesz >> 3);
         while (i < programm_header_entry->p_filesz >> 3)
@@ -73,7 +73,8 @@ signed int get_elf_info(struct elf32_hdr *elf_mmaped_area, struct dyn_info *info
   return -1;
 }
 
-int get_strtable_values(void* elf_mmaped_data, struct dependencies_info* dependencies, struct strtab_entry* soname)
+int get_strtable_values(void* elf_mmaped_data, struct dependencies_info* dependencies,
+                        struct strtab_entry* soname)
 {
   struct dyn_info info = {
       0, 0, 0
@@ -81,23 +82,27 @@ int get_strtable_values(void* elf_mmaped_data, struct dependencies_info* depende
 
   get_elf_info(elf_mmaped_data, &info);
 
-  unsigned long strtable_addr_value = *((unsigned long*)(elf_mmaped_data + info.DT_STRTAB_addr + 4));
+  unsigned long strtable_addr_value = *((unsigned long*) (elf_mmaped_data + info.DT_STRTAB_addr +
+                                                          4));
   dependencies->size = info.DT_NEEDED_addrs.size;
-  dependencies->entries = (struct strtab_entry*) malloc(sizeof(struct strtab_entry) * dependencies->size);
+  dependencies->entries = (struct strtab_entry*) malloc(
+      sizeof(struct strtab_entry) * dependencies->size);
 
-  for (int i = 0; i < info.DT_NEEDED_addrs.size; ++i) {
+  for (int i = 0; i < info.DT_NEEDED_addrs.size; ++i)
+  {
     unsigned long DT_NEEDED_addr = info.DT_NEEDED_addrs.addr[i];
-    dependencies->entries[i].type = (unsigned long*)(elf_mmaped_data + DT_NEEDED_addr);
-    unsigned long needed_offset = *((unsigned long*)(elf_mmaped_data + DT_NEEDED_addr + 4));
-    dependencies->entries[i].value = (char*)(elf_mmaped_data + strtable_addr_value + needed_offset);
+    dependencies->entries[i].type = (unsigned long*) (elf_mmaped_data + DT_NEEDED_addr);
+    unsigned long needed_offset = *((unsigned long*) (elf_mmaped_data + DT_NEEDED_addr + 4));
+    dependencies->entries[i].value = (char*) (elf_mmaped_data + strtable_addr_value +
+                                              needed_offset);
     LOGV("needed: %s", dependencies->entries[i].value);
   }
 
   if (info.DT_SONAME_addr != 0)
   {
-    soname->type = (unsigned long*)(elf_mmaped_data + info.DT_SONAME_addr);
-    unsigned long soname_offset = *((unsigned long*)(elf_mmaped_data + info.DT_SONAME_addr + 4));
-    soname->value = (char*)(elf_mmaped_data + strtable_addr_value + soname_offset);
+    soname->type = (unsigned long*) (elf_mmaped_data + info.DT_SONAME_addr);
+    unsigned long soname_offset = *((unsigned long*) (elf_mmaped_data + info.DT_SONAME_addr + 4));
+    soname->value = (char*) (elf_mmaped_data + strtable_addr_value + soname_offset);
     LOGV("soname: %s", soname->value);
   }
 

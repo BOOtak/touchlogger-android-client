@@ -1,12 +1,12 @@
 #include <jni.h>
 #include <string>
 #include <stdlib.h>
+#include <unistd.h>
 
-// TODO: make this depend on build type
-#define DEBUG 1
-
-#include "dirty_copy.h"
-#include "file_utils.h"
+#include "dirty/file_utils/file_utils.h"
+#include "dirty/lib_utils/inject.h"
+#include "dirty/file_utils/dirty_copy.h"
+#include "dirty/common/logging.h"
 
 #ifdef __aarch64__
 #define APP_PROCESS_PATH "/system/bin/app_process32"
@@ -17,6 +17,9 @@
 #define LIBCUTILS_PATH "/system/lib/libcutils.so"
 #define LIBMTP_PATH "/system/lib/libmtp.so"
 #define EXEC_PAYLOAD_SDCARD_PATH "/sdcard/exec_payload"
+
+// TODO: make this depend on build type
+#define DEBUG 1
 
 char app_process_backup_path[PATH_MAX];
 char libcutils_backup_path[PATH_MAX];

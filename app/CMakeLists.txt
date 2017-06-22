@@ -6,11 +6,15 @@ set(EXECUTABLE_OUTPUT_PATH "${ASSETS_PATH}/${ANDROID_ABI}")
 # TODO: make it depend on actual debug flag
 set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDEBUG=1" )
 
+set(SRC_DIR src/main/cpp)
+
 add_library(dirtycopy SHARED
-    src/main/cpp/native-lib.cpp
-    src/main/cpp/dirty_copy.c
-    src/main/cpp/elf_parser.c
-    src/main/cpp/file_utils.c
+    ${SRC_DIR}/native-lib.cpp
+    ${SRC_DIR}/dirty/common/common.c
+    ${SRC_DIR}/dirty/file_utils/file_utils.c
+    ${SRC_DIR}/dirty/file_utils/dirty_copy.c
+    ${SRC_DIR}/dirty/lib_utils/inject.c
+    ${SRC_DIR}/dirty/lib_utils/elf_parser.c
     )
 
 set_target_properties(dirtycopy PROPERTIES
@@ -22,8 +26,8 @@ target_link_libraries(dirtycopy
     )
 
 add_library(shared_payload SHARED
-    src/main/cpp/shared_payload.c
-    src/main/cpp/file_utils.c
+    ${SRC_DIR}/dirty/file_utils/file_utils.c
+    ${SRC_DIR}/shared_payload.c
     )
 
 set_target_properties(shared_payload PROPERTIES
@@ -35,7 +39,7 @@ target_link_libraries(shared_payload
     )
 
 add_executable(exec_payload
-    src/main/cpp/exec_payload.c
+    ${SRC_DIR}/exec_payload.c
     )
 
 target_link_libraries(exec_payload

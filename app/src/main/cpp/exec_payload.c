@@ -7,8 +7,8 @@
 #include <unistd.h>
 #include <dlfcn.h>
 #include <stdlib.h>
-
-#include "dirty_copy.h"
+#include <fcntl.h>
+#include "dirty/common/logging.h"
 
 typedef int getcon_t(char** con);
 

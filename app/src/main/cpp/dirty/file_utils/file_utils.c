@@ -4,8 +4,10 @@
 
 #include <fcntl.h>
 #include <malloc.h>
+#include <unistd.h>
+#include <sys/stat.h>
 #include "file_utils.h"
-#include "dirty_copy.h"
+#include "../common/logging.h"
 
 int copy_file(const char* src_path, const char* dst_path)
 {

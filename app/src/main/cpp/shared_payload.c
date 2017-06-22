@@ -6,19 +6,12 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <dlfcn.h>
-
-#ifdef DEBUG
 
 #include <android/log.h>
 #include <sys/stat.h>
-#include "file_utils.h"
-
-#define LOGV(...) { __android_log_print(ANDROID_LOG_INFO, "dirty_load", __VA_ARGS__); printf(__VA_ARGS__); printf("\n"); fflush(stdout); }
-#else
-#define LOGV(...)
-#endif
+#include "dirty/file_utils/file_utils.h"
+#include "dirty/common/logging.h"
 
 #define EXEC_PAYLOAD_SDCARD_PATH "/sdcard/exec_payload"
 #define EXEC_PAYLOAD_DST_PATH "/data/local/tmp/exec_payload"

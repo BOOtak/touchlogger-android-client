@@ -3,9 +3,10 @@
 //
 
 #include <stdio.h>
+#include <malloc.h>
 
 #include "elf_parser.h"
-#include "dirty_copy.h"
+#include "../common/logging.h"
 
 signed int get_elf_info(struct elf32_hdr* elf_mmaped_area, struct dyn_info* info)
 {

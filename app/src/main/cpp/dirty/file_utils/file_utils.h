@@ -5,11 +5,7 @@
 #ifndef TOUCHLOGGER_DIRTY_FILE_UTILS_H
 #define TOUCHLOGGER_DIRTY_FILE_UTILS_H
 
-#ifdef __cplusplus
-#define API_METHOD extern "C"
-#else
-#define API_METHOD
-#endif
+#include "../common/common.h"
 
 API_METHOD int copy_file(const char* src_path, const char* dst_path);
 

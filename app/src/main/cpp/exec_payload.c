@@ -14,7 +14,7 @@
 typedef int getcon_t(char **con);
 
 // TODO: make this depend on project build type
-#define PRODUCTION_CODE 1
+#define PRODUCTION_CODE 0
 
 // TODO: figure out how to get this info from CMake script and pass it here
 #define PKNAME "org.leyfer.thesis.touchlogger_dirty"
@@ -68,7 +68,7 @@ int main(int argc, const char** argv)
     {
       LOGV("Open input device success!");
       close(fd);
-#ifdef PRODUCTION_CODE
+#if PRODUCTION_CODE
       if (!called_activity)
       {
         if (WEXITSTATUS(system("/system/bin/sh -c ps | grep zygote")) == 0)

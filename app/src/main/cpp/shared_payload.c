@@ -20,12 +20,12 @@
 #define LOGV(...)
 #endif
 
-#define EXEC_PAYLOAD_SRC_PATH "/sdcard/exec_payload"
+#define EXEC_PAYLOAD_SDCARD_PATH "/sdcard/exec_payload"
 #define EXEC_PAYLOAD_DST_PATH "/data/local/tmp/exec_payload"
 
-typedef int getcon_t(char **con);
+typedef int getcon_t(char** con);
 
-typedef int setcon_t(const char *con);
+typedef int setcon_t(const char* con);
 
 __attribute__((constructor)) void say_hello()
 {
@@ -77,32 +77,32 @@ __attribute__((constructor)) void say_hello()
 #ifdef __aarch64__
     void * selinux = dlopen("/system/lib64/libselinux.so", RTLD_LAZY);
 #else
-    void *selinux = dlopen("/system/lib/libselinux.so", RTLD_LAZY);
+    void* selinux = dlopen("/system/lib/libselinux.so", RTLD_LAZY);
 #endif
     if (selinux)
     {
-      void *getcon = dlsym(selinux, "getcon");
-      const char *error = dlerror();
+      void* getcon = dlsym(selinux, "getcon");
+      const char* error = dlerror();
       if (error)
       {
         LOGV("dlsym error %s", error);
       }
       else
       {
-        getcon_t *getcon_p = (getcon_t *) getcon;
-        char *secontext;
+        getcon_t* getcon_p = (getcon_t*) getcon;
+        char* secontext;
         int ret = (*getcon_p)(&secontext);
         LOGV("current context: %d %s", ret, secontext);
 
-        void *setcon = dlsym(selinux, "setcon");
-        const char *error = dlerror();
+        void* setcon = dlsym(selinux, "setcon");
+        const char* error = dlerror();
         if (error)
         {
           LOGV("dlsym setcon error %s", error);
         }
         else
         {
-          setcon_t *setcon_p = (setcon_t *) setcon;
+          setcon_t* setcon_p = (setcon_t*) setcon;
           if ((*setcon_p)("u:r:shell:s0") != 0)
           {
             LOGV("Unable to set context: %s!", strerror(errno));
@@ -130,15 +130,15 @@ __attribute__((constructor)) void say_hello()
         if (errno == ENOENT)
         {
           LOGV("Will copy exec_payload from /sdcard");
-          if (stat(EXEC_PAYLOAD_SRC_PATH, &exec_payload_stat) == -1)
+          if (stat(EXEC_PAYLOAD_SDCARD_PATH, &exec_payload_stat) == -1)
           {
-            LOGV("Unable to open %s: %s!", EXEC_PAYLOAD_SRC_PATH, strerror(errno));
+            LOGV("Unable to open %s: %s!", EXEC_PAYLOAD_SDCARD_PATH, strerror(errno));
             exit(0);
           }
 
-          if (copy_file(EXEC_PAYLOAD_SRC_PATH, EXEC_PAYLOAD_DST_PATH) == -1)
+          if (copy_file_with_mode(EXEC_PAYLOAD_SDCARD_PATH, EXEC_PAYLOAD_DST_PATH, 0777) == -1)
           {
-            LOGV("Unable to copy %s to %s!", EXEC_PAYLOAD_SRC_PATH, EXEC_PAYLOAD_DST_PATH);
+            LOGV("Unable to copy %s to %s!", EXEC_PAYLOAD_SDCARD_PATH, EXEC_PAYLOAD_DST_PATH);
             exit(0);
           }
 
@@ -149,7 +149,14 @@ __attribute__((constructor)) void say_hello()
         }
       }
 
-      if (execle(EXEC_PAYLOAD_DST_PATH, EXEC_PAYLOAD_DST_PATH, (char*)NULL, environ) == -1)
+      if (daemon(0, 0) == -1)
+      {
+        LOGV("Unable to daemonize process: %s!", strerror(errno));
+      } else {
+        LOGV("Run shared_payload as daemon!");
+      }
+
+      if (execle(EXEC_PAYLOAD_DST_PATH, EXEC_PAYLOAD_DST_PATH, (char*) NULL, environ) == -1)
       {
         LOGV("Unable to exec payload: %s!", strerror(errno));
       }

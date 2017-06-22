@@ -14,11 +14,9 @@ import org.leyfer.thesis.touchlogger_dirty.dialog.RestartingDialog;
  */
 
 public class InjectProgressHandler extends Handler {
-
-    public static final int MSG_INJECT_DEPENDENCY_SUCCESS = 1;
-    public static final int MSG_INJECT_DEPENDENCY_FAIL = 2;
-    public static final int MSG_ZYGOTE_RESTART_SUCCESS = 3;
-    public static final int MSG_ZYGOTE_RESTART_FAIL = 4;
+    public static final int PREPARE_SUCCESS = 1;
+    public static final int PREPARE_FAIL = 2;
+    public static final int TRIGGER_SUCCESS = 3;
 
     private Context mContext;
 
@@ -29,17 +27,14 @@ public class InjectProgressHandler extends Handler {
     @Override
     public void handleMessage(Message msg) {
         switch (msg.what) {
-            case MSG_INJECT_DEPENDENCY_SUCCESS:
+            case PREPARE_SUCCESS:
                 new RestartZygoteAlertDialog(mContext, this).show();
                 break;
-            case MSG_INJECT_DEPENDENCY_FAIL:
+            case PREPARE_FAIL:
                 new ErrorAlertDialog(mContext, mContext.getString(R.string.inject_error_msg)).show();
                 break;
-            case MSG_ZYGOTE_RESTART_SUCCESS:
+            case TRIGGER_SUCCESS:
                 new RestartingDialog(mContext).show();
-                break;
-            case MSG_ZYGOTE_RESTART_FAIL:
-                new ErrorAlertDialog(mContext, mContext.getString(R.string.restart_zygote_error_msg)).show();
                 break;
             default:
                 break;

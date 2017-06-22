@@ -3,6 +3,7 @@
 //
 
 #include <fcntl.h>
+#include <malloc.h>
 #include "file_utils.h"
 #include "dirty_copy.h"
 
@@ -40,8 +41,17 @@ int copy_file(const char* src_path, const char* dst_path)
 
   close(src_fd);
   close(dst_fd);
+  return 0;
+}
 
-  if (chmod(dst_path, 0777) != 0)
+int copy_file_with_mode(const char* src_path, const char* dst_path, int mode)
+{
+  if (copy_file(src_path, dst_path) == -1) {
+    LOGV("Unable to copy file!");
+    return -1;
+  }
+
+  if (chmod(dst_path, mode) != 0)
   {
     LOGV("Unable to chmod %s: %s!", dst_path, strerror(errno));
     return -1;

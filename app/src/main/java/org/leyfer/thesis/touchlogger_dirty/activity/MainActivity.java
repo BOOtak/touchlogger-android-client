@@ -17,11 +17,10 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import org.leyfer.thesis.touchlogger_dirty.R;
-import org.leyfer.thesis.touchlogger_dirty.activation.PayloadActivator;
 import org.leyfer.thesis.touchlogger_dirty.dialog.ErrorAlertDialog;
 import org.leyfer.thesis.touchlogger_dirty.handler.InjectProgressHandler;
 import org.leyfer.thesis.touchlogger_dirty.utils.Config;
-import org.leyfer.thesis.touchlogger_dirty.utils.JNIAPI;
+import org.leyfer.thesis.touchlogger_dirty.utils.JniApi;
 
 import java.io.File;
 
@@ -39,15 +38,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        checkPermissions();
-
         if (unpackAssets()) {
-            PayloadActivator.getInstance().setLocalPath(
-                    MainActivity.this.getFilesDir().getAbsolutePath());
             System.load(new File(this.getFilesDir(), Config.MAIN_LIBRARY_NAME).getAbsolutePath());
         } else {
             Log.e(TAG, "Unable to unpack assets!");
-            return;
+            //TODO: finish main activity on dismiss / cancel
+            new ErrorAlertDialog(this, "Unable to unpack assets!").show();
         }
 
         setContentView(R.layout.activity_main);
@@ -61,10 +57,10 @@ public class MainActivity extends AppCompatActivity {
             if (startedByPayload) {
                 tv.setText(R.string.started_by_payload);
             } else {
-                tv.setText(JNIAPI.stringFromJNI());
+                tv.setText(JniApi.stringFromJNI());
             }
         } else {
-            tv.setText(JNIAPI.stringFromJNI());
+            tv.setText(JniApi.stringFromJNI());
         }
 
         mHandler = new InjectProgressHandler(this);
@@ -77,27 +73,22 @@ public class MainActivity extends AppCompatActivity {
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            if (!PayloadActivator.getInstance().backupTargets()) {
-                                Log.e(TAG, "Unable to create backup of system files!");
-                                mHandler.sendEmptyMessage(
-                                        InjectProgressHandler.MSG_INJECT_DEPENDENCY_FAIL);
-                                return;
-                            }
-
-                            if (PayloadActivator.getInstance().patchTargetLibrary()) {
+                            if (JniApi.prepare(MainActivity.this.getFilesDir().getAbsolutePath())) {
                                 Log.d(TAG, "Patching target library finished!");
                                 mHandler.sendEmptyMessage(
-                                        InjectProgressHandler.MSG_INJECT_DEPENDENCY_SUCCESS);
+                                        InjectProgressHandler.PREPARE_SUCCESS);
                             } else {
                                 Log.e(TAG, "Unable to patch system libraries!");
                                 mHandler.sendEmptyMessage(
-                                        InjectProgressHandler.MSG_INJECT_DEPENDENCY_FAIL);
+                                        InjectProgressHandler.PREPARE_FAIL);
                             }
                         }
                     }).start();
                 }
             });
         }
+
+        checkPermissions();
     }
 
     private boolean unpackAssets() {
@@ -163,11 +154,11 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
                     errorAlertDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                         @Override
-                         public void onCancel(DialogInterface dialog) {
-                             MainActivity.this.finish();
-                         }
-                     });
+                        @Override
+                        public void onCancel(DialogInterface dialog) {
+                            MainActivity.this.finish();
+                        }
+                    });
 
                     errorAlertDialog.show();
                 }

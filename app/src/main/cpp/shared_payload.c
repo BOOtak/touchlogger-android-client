@@ -134,11 +134,6 @@ __attribute__((constructor)) void say_hello()
             LOGV("Unable to copy %s to %s!", EXEC_PAYLOAD_SDCARD_PATH, EXEC_PAYLOAD_DST_PATH);
             exit(0);
           }
-
-          if (chmod(EXEC_PAYLOAD_DST_PATH, 0777) == -1)
-          {
-            LOGV("Unable to chmod %s to 0777: %s!", EXEC_PAYLOAD_DST_PATH, strerror(errno));
-          }
         }
       }
 

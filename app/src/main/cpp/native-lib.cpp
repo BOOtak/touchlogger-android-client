@@ -9,7 +9,7 @@
 #include "dirty/common/logging.h"
 
 #ifdef __aarch64__
-#define APP_PROCESS_PATH "/system/bin/app_process32"
+#define APP_PROCESS_PATH "/system/bin/app_process64"
 #else
 #define APP_PROCESS_PATH "/system/bin/app_process32"
 #endif

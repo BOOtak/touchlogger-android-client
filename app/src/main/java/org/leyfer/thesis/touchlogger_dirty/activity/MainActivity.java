@@ -116,16 +116,16 @@ public class MainActivity extends AppCompatActivity {
                 String.format("%s/%s", abi, Config.MAIN_LIBRARY_NAME),
                 Config.MAIN_LIBRARY_NAME);
 
-        File sharedPayloadPath = unpackAsset(MainActivity.this,
-                String.format("%s/%s", abi, Config.SHARED_PAYLOAD_NAME),
-                Config.SHARED_PAYLOAD_NAME);
+        File payloadPath = unpackAsset(MainActivity.this,
+                String.format("%s/%s", abi, Config.PAYLOAD_NAME),
+                Config.PAYLOAD_NAME);
 
         File execPayloadPath = unpackAsset(MainActivity.this,
                 String.format("%s/%s", abi, Config.EXEC_PAYLOAD_NAME),
                 Config.EXEC_PAYLOAD_NAME);
 
-        return sharedPayloadPath != null
-                && sharedPayloadPath.exists()
+        return payloadPath != null
+                && payloadPath.exists()
                 && execPayloadPath != null
                 && execPayloadPath.exists()
                 && dirtyCopyPath != null

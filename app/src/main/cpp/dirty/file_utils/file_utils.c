@@ -7,7 +7,6 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include "file_utils.h"
-#include "../common/logging.h"
 
 int copy_file(const char* src_path, const char* dst_path)
 {
@@ -15,11 +14,14 @@ int copy_file(const char* src_path, const char* dst_path)
   if (src_fd == -1)
   {
     LOGV("unable to open %s: %s", src_path, strerror(errno));
+    return -1;
   }
+
   int dst_fd = open(dst_path, O_WRONLY | O_CREAT);
   if (dst_fd == -1)
   {
     LOGV("unable to open %s: %s", dst_path, strerror(errno));
+    return -1;
   }
 
   int bufsize = 4096;

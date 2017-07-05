@@ -4,8 +4,8 @@ set(ASSETS_PATH "${CMAKE_CURRENT_LIST_DIR}/src/main/assets")
 set(EXECUTABLE_OUTPUT_PATH "${ASSETS_PATH}/${ANDROID_ABI}")
 
 # TODO: make it depend on actual debug flag
-set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDEBUG=1 -fvisibility=hidden -s" )
-set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG=1 -fvisibility=hidden -s" )
+set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDEBUG=1 -fvisibility=hidden -s -Os -fno-stack-protector -fmerge-all-constants -fno-unwind-tables -fno-asynchronous-unwind-tables" )
+set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG=1 -fvisibility=hidden -s -Os" )
 
 set(SRC_DIR src/main/cpp)
 

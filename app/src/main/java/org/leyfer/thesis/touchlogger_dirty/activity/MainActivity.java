@@ -1,7 +1,6 @@
 package org.leyfer.thesis.touchlogger_dirty.activity;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -33,20 +32,21 @@ import static org.leyfer.thesis.touchlogger_dirty.utils.FileUtils.unpackAsset;
 
 public class MainActivity extends AppCompatActivity {
 
+    static {
+        System.loadLibrary(Config.MAIN_LIBRARY_NAME);
+    }
+
     public static final String TAG = "TouchLoggeer-dirty";
     private static final int PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
     private static final int PERMISSION_REQUEST_SYSTEM_ALERT_WINDOW = 2;
     private static final String EXTRA_STARTED_BY_PAYLOAD = "org.leyfer.thesis.extra.started_by_payload";
     private Handler mHandler;
 
-    @SuppressLint("UnsafeDynamicallyLoadedCode")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (unpackAssets()) {
-            System.load(new File(this.getFilesDir(), Config.MAIN_LIBRARY_NAME).getAbsolutePath());
-        } else {
+        if (!unpackAssets()) {
             Log.e(TAG, "Unable to unpack assets!");
             //TODO: finish main activity on dismiss / cancel
             new ErrorAlertDialog(this, "Unable to unpack assets!").show();
@@ -112,10 +112,6 @@ public class MainActivity extends AppCompatActivity {
             abi = Build.CPU_ABI;
         }
 
-        File dirtyCopyPath = unpackAsset(MainActivity.this,
-                String.format("%s/%s", abi, Config.MAIN_LIBRARY_NAME),
-                Config.MAIN_LIBRARY_NAME);
-
         File payloadPath = unpackAsset(MainActivity.this,
                 String.format("%s/%s", abi, Config.PAYLOAD_NAME),
                 Config.PAYLOAD_NAME);
@@ -127,9 +123,7 @@ public class MainActivity extends AppCompatActivity {
         return payloadPath != null
                 && payloadPath.exists()
                 && execPayloadPath != null
-                && execPayloadPath.exists()
-                && dirtyCopyPath != null
-                && dirtyCopyPath.exists();
+                && execPayloadPath.exists();
     }
 
     private void checkSDCardPermission() {

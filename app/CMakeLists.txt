@@ -26,10 +26,6 @@ add_library(dirtycopy SHARED
     ${DIRTY_SOURCES}
     )
 
-set_target_properties(dirtycopy PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY "${ASSETS_PATH}/${ANDROID_ABI}"
-    )
-
 target_link_libraries(dirtycopy
     PUBLIC log
     )

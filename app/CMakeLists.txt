@@ -84,3 +84,10 @@ set_target_properties(shared_payload PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY "${ASSETS_PATH}/${ANDROID_ABI}"
     )
 
+add_executable(test_input
+    ${SRC_DIR}/test_input.c
+    )
+
+target_link_libraries(test_input
+    PUBLIC log
+    )

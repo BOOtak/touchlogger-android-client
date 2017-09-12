@@ -92,6 +92,7 @@ void MultiTouchMotionAccumulator::reset(InputDevice* device)
 
 void MultiTouchMotionAccumulator::process(const input_event* rawEvent)
 {
+  //FIXME: implement virtual keys detection & handling
   if (rawEvent->type == EV_ABS)
   {
     bool newSlot = false;

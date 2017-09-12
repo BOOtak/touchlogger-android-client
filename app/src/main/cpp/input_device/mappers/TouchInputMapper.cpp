@@ -22,13 +22,13 @@ inline static T min(const T &a, const T &b)
 void TouchInputMapper::sync(nsecs_t when)
 {
   const RawState* last = mRawStatesPending.empty() ?
-                         &mCurrentRawState : &mRawStatesPending.back();
+                         &mCurrentRawState : mRawStatesPending.back();
 
   // Push a new state.
   RawState* next = new RawState();
   next->clear();
   next->when = when;
-  mRawStatesPending.push_back(*next);
+  mRawStatesPending.push_back(next);
 
   // Sync touch
   syncTouch(when, next);
@@ -71,6 +71,7 @@ void TouchInputMapper::assignPointerIds(const RawState* last, RawState* current)
       uint32_t id = i;
       current->rawPointerData.pointers[i].id = id;
       current->rawPointerData.idToIndex[id] = i;
+      current->rawPointerData.markIdBit(id);
     }
     return;
   }
@@ -81,6 +82,7 @@ void TouchInputMapper::assignPointerIds(const RawState* last, RawState* current)
     uint32_t id = last->rawPointerData.pointers[0].id;
     current->rawPointerData.pointers[0].id = id;
     current->rawPointerData.idToIndex[id] = 0;
+    current->rawPointerData.markIdBit(id);
     return;
   }
 
@@ -225,6 +227,7 @@ void TouchInputMapper::assignPointerIds(const RawState* last, RawState* current)
       uint32_t id = last->rawPointerData.pointers[lastPointerIndex].id;
       current->rawPointerData.pointers[currentPointerIndex].id = id;
       current->rawPointerData.idToIndex[id] = currentPointerIndex;
+      current->rawPointerData.markIdBit(id);
       usedIdBits.markBit(id);
 
 #if DEBUG_POINTER_ASSIGNMENT
@@ -243,6 +246,7 @@ void TouchInputMapper::assignPointerIds(const RawState* last, RawState* current)
 
     current->rawPointerData.pointers[currentPointerIndex].id = id;
     current->rawPointerData.idToIndex[id] = currentPointerIndex;
+    current->rawPointerData.markIdBit(id);
 
 #if DEBUG_POINTER_ASSIGNMENT
     LOGV("assignPointerIds - assigned: cur=%d, id=%d",
@@ -261,9 +265,18 @@ void TouchInputMapper::processRawTouches(bool timeout)
   size_t count;
   for (count = 0; count < N; count++)
   {
-    const RawState &next = mRawStatesPending[count];
+    const RawState* next = mRawStatesPending[count];
 
-    mCurrentRawState.copyFrom(next);
+    mCurrentRawState.copyFrom(*next);
+#if DEBUG_RAW_EVENTS
+    LOGV("mCurrentRawState: next.rawPointerData.pointerCount = %d", next->rawPointerData.pointerCount);
+    for (int i = 0; i < next->rawPointerData.pointerCount; ++i)
+    {
+      RawPointerData::Pointer pointer = next->rawPointerData.pointers[i];
+      LOGV("Pointer id = %d, x = %d, y = %d, pressure = %d", pointer.id, pointer.x,
+           pointer.y, pointer.pressure);
+    }
+#endif
     if (mCurrentRawState.when < mLastRawState.when)
     {
       mCurrentRawState.when = mLastRawState.when;
@@ -339,7 +352,6 @@ void TouchInputMapper::dispatchTouches(nsecs_t when)
   {
     if (!currentIdBits.isEmpty())
     {
-      LOGV("Move");
       // No pointer id changes so this is a move event.
       // The listener takes care of batching moves so we don't have to deal with that here.
       dispatchMotion(when,
@@ -374,7 +386,6 @@ void TouchInputMapper::dispatchTouches(nsecs_t when)
     // Dispatch pointer up events.
     while (!upIdBits.isEmpty())
     {
-      LOGV("UP");
       uint32_t upId = upIdBits.clearFirstMarkedBit();
 
       dispatchMotion(when,
@@ -402,7 +413,6 @@ void TouchInputMapper::dispatchTouches(nsecs_t when)
     // Dispatch pointer down events using the new pointer locations.
     while (!downIdBits.isEmpty())
     {
-      LOGV("DOWN");
       uint32_t downId = downIdBits.clearFirstMarkedBit();
       dispatchedIdBits.markBit(downId);
 

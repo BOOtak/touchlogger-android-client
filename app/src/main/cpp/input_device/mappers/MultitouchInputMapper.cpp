@@ -145,21 +145,12 @@ void MultiTouchInputMapper::syncTouch(nsecs_t when, RawState* outState)
     {
       outPointer.id = (uint32_t) id;
       outState->rawPointerData.idToIndex[outPointer.id] = outCount;
+      outState->rawPointerData.markIdBit(id);
       newPointerIdBits.markBit(outPointer.id);
     }
 
     outCount += 1;
   }
-
-#if DEBUG_POINTERS
-  LOGV("Outcount: %d", outCount);
-  for (int i = 0; i < outCount; ++i)
-  {
-    RawPointerData::Pointer &pointer = outState->rawPointerData.pointers[i];
-    LOGV("Pointer id = %d, x = %d, y = %d, pressure = %d", pointer.id, pointer.x,
-         pointer.y, pointer.pressure);
-  }
-#endif
 
   outState->rawPointerData.pointerCount = outCount;
   mPointerIdBits = newPointerIdBits;

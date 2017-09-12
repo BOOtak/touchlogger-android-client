@@ -55,7 +55,7 @@ protected:
 
     virtual void configureRawPointerAxes();
 
-    std::vector<RawState> mRawStatesPending;
+    std::vector<RawState*> mRawStatesPending;
     RawState mCurrentRawState;
 
     CookedState mCurrentCookedState;

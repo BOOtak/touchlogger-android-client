@@ -3,6 +3,7 @@
 //
 
 #include <stdio.h>
+#include <string>
 #include "TouchInputMapper.h"
 
 template<typename T>
@@ -475,6 +476,9 @@ TouchInputMapper::dispatchMotion(nsecs_t when, int32_t action, const PointerProp
   PointerCoords pointerCoords[MAX_POINTERS];
   PointerProperties pointerProperties[MAX_POINTERS];
   uint32_t pointerCount = 0;
+
+  int32_t origAction = action;
+
   while (!idBits.isEmpty())
   {
     uint32_t id = idBits.clearFirstMarkedBit();
@@ -495,13 +499,13 @@ TouchInputMapper::dispatchMotion(nsecs_t when, int32_t action, const PointerProp
     // Replace initial down and final up action.
     // We can compare the action without masking off the changed pointer index
     // because we know the index is 0.
-    if (action == AMOTION_EVENT_ACTION_POINTER_DOWN)
+    if (origAction == AMOTION_EVENT_ACTION_POINTER_DOWN)
     {
-      action = AMOTION_EVENT_ACTION_DOWN;
+      origAction = AMOTION_EVENT_ACTION_DOWN;
     }
-    else if (action == AMOTION_EVENT_ACTION_POINTER_UP)
+    else if (origAction == AMOTION_EVENT_ACTION_POINTER_UP)
     {
-      action = AMOTION_EVENT_ACTION_UP;
+      origAction = AMOTION_EVENT_ACTION_UP;
     }
     else
     {
@@ -509,8 +513,36 @@ TouchInputMapper::dispatchMotion(nsecs_t when, int32_t action, const PointerProp
     }
   }
 
-  //FIXME: write complete motion event to console
-  LOGV("action = %d", action);
+  std::string actionStr;
+  switch (origAction)
+  {
+    case AMOTION_EVENT_ACTION_DOWN:
+      actionStr = "Down";
+      break;
+    case AMOTION_EVENT_ACTION_POINTER_DOWN:
+      actionStr = "Pointer down";
+      break;
+    case AMOTION_EVENT_ACTION_MOVE:
+      actionStr = "Move";
+      break;
+    case AMOTION_EVENT_ACTION_POINTER_UP:
+      actionStr = "Pointer up";
+      break;
+    case AMOTION_EVENT_ACTION_UP:
+      actionStr = "Up";
+      break;
+    default:
+      actionStr = "Unknown";
+  }
+
+  LOGV("Action %s (%d)", actionStr.c_str(), origAction);
+
+  for (int i = 0; i < pointerCount; ++i)
+  {
+    PointerCoords coord = pointerCoords[i];
+    LOGV("    %d) x: %f, y: %f  pressure: %d", coord., coord.getAxisValue(AMOTION_EVENT_AXIS_X),
+         coord.getAxisValue(AMOTION_EVENT_AXIS_Y), coord.getAxisValue(AMOTION_EVENT_AXIS_PRESSURE));
+  }
 }
 
 void TouchInputMapper::reset(nsecs_t when)

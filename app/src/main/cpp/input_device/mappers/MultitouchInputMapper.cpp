@@ -114,11 +114,6 @@ void MultiTouchInputMapper::syncTouch(nsecs_t when, RawState* outState)
     outPointer.tiltX = 0;
     outPointer.tiltY = 0;
 
-#if DEBUG_POINTERS
-    LOGV("OP in-place: id = %d, x = %d, y = %d, pressure = %d", outPointer.id, outPointer.x,
-         outPointer.y, outPointer.pressure);
-#endif
-
     // Assign pointer id using tracking id if available.
     mHavePointerIds = true;
     int32_t trackingId = inSlot->getTrackingId();
@@ -160,9 +155,9 @@ void MultiTouchInputMapper::syncTouch(nsecs_t when, RawState* outState)
   LOGV("Outcount: %d", outCount);
   for (int i = 0; i < outCount; ++i)
   {
-    RawPointerData::Pointer &outPointer = outState->rawPointerData.pointers[outCount];
-    LOGV("OP final: id = %d, x = %d, y = %d, pressure = %d", outPointer.id, outPointer.x,
-         outPointer.y, outPointer.pressure);
+    RawPointerData::Pointer &pointer = outState->rawPointerData.pointers[i];
+    LOGV("Pointer id = %d, x = %d, y = %d, pressure = %d", pointer.id, pointer.x,
+         pointer.y, pointer.pressure);
   }
 #endif
 

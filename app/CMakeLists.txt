@@ -90,7 +90,6 @@ add_executable(test_input
     ${SRC_DIR}/input_device/mappers/MultitouchInputMapper.cpp
     ${SRC_DIR}/input_device/mappers/TouchInputMapper.cpp
     ${SRC_DIR}/input_device/accumulators/MultiTouchMotionAccumulator.cpp
-    ${SRC_DIR}/input_device/accumulators/SingleTouchMotionAccumulator.cpp
     ${SRC_DIR}/input_device/utils/CookedPointData.cpp
     ${SRC_DIR}/input_device/utils/InputDevice.cpp
     ${SRC_DIR}/input_device/utils/PointerCoords.cpp

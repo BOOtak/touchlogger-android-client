@@ -21,6 +21,9 @@ int main(int argc, const char** argv)
   MultiTouchInputMapper* multiTouchInputMapper = new MultiTouchInputMapper(&inputDevice);
   multiTouchInputMapper->configure();
 
+  //FIXME: add timestamp
+  multiTouchInputMapper->reset(0);
+
   int buffer_size = 16;  // events
   input_event read_buffer[buffer_size];
   while (1)

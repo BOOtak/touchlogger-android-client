@@ -14,6 +14,18 @@
 #include <vector>
 #include <linux/input.h>
 
+/* An input mapper transforms raw input events into cooked event data.
+ * A single input device can have multiple associated input mappers in order to interpret
+ * different classes of events.
+ *
+ * InputMapper lifecycle:
+ * - create
+ * - configure with 0 changes
+ * - reset
+ * - process, process, process (may occasionally reconfigure with non-zero changes or reset)
+ * - reset
+ * - destroy
+ */
 class TouchInputMapper
 {
 public:

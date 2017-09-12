@@ -57,11 +57,18 @@ void MultiTouchInputMapper::configureRawPointerAxes()
       slotCount = MAX_SLOTS;
     }
 
+#if DEBUG_POINTERS
+    LOGV("Using slot protocol");
+#endif
+
     mMultiTouchMotionAccumulator.configure(getDevice(),
                                            slotCount, true /*usingSlotsProtocol*/);
   }
   else
   {
+#if DEBUG_POINTERS
+    LOGV("No slot protocol");
+#endif
     mMultiTouchMotionAccumulator.configure(getDevice(),
                                            MAX_POINTERS, false /*usingSlotsProtocol*/);
   }
@@ -70,6 +77,9 @@ void MultiTouchInputMapper::configureRawPointerAxes()
 void MultiTouchInputMapper::syncTouch(nsecs_t when, RawState* outState)
 {
   size_t inCount = mMultiTouchMotionAccumulator.getSlotCount();
+#if DEBUG_POINTERS
+  LOGV("inCount: %d", inCount);
+#endif
   size_t outCount = 0;
   BitSet32 newPointerIdBits;
 
@@ -103,6 +113,11 @@ void MultiTouchInputMapper::syncTouch(nsecs_t when, RawState* outState)
     outPointer.distance = inSlot->getDistance();
     outPointer.tiltX = 0;
     outPointer.tiltY = 0;
+
+#if DEBUG_POINTERS
+    LOGV("OP in-place: id = %d, x = %d, y = %d, pressure = %d", outPointer.id, outPointer.x,
+         outPointer.y, outPointer.pressure);
+#endif
 
     // Assign pointer id using tracking id if available.
     mHavePointerIds = true;
@@ -140,6 +155,16 @@ void MultiTouchInputMapper::syncTouch(nsecs_t when, RawState* outState)
 
     outCount += 1;
   }
+
+#if DEBUG_POINTERS
+  LOGV("Outcount: %d", outCount);
+  for (int i = 0; i < outCount; ++i)
+  {
+    RawPointerData::Pointer &outPointer = outState->rawPointerData.pointers[outCount];
+    LOGV("OP final: id = %d, x = %d, y = %d, pressure = %d", outPointer.id, outPointer.x,
+         outPointer.y, outPointer.pressure);
+  }
+#endif
 
   outState->rawPointerData.pointerCount = outCount;
   mPointerIdBits = newPointerIdBits;

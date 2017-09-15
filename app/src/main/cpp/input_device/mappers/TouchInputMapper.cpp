@@ -569,7 +569,7 @@ void TouchInputMapper::process(const input_event* rawEvent)
 {
   if (rawEvent->type == EV_SYN && rawEvent->code == SYN_REPORT)
   {
-    sync(rawEvent->time.tv_sec * 1000 * 1000 * 1000 + rawEvent->time.tv_usec * 1000);
+    sync(rawEvent->time.tv_sec * 1000000000LL + rawEvent->time.tv_usec * 1000);
   }
 }
 

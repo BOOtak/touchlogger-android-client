@@ -535,12 +535,13 @@ TouchInputMapper::dispatchMotion(nsecs_t when, int32_t action, const PointerProp
       actionStr = "Unknown";
   }
 
-  LOGV("Action %s (%d)", actionStr.c_str(), origAction);
+  LOGV("%llu: Action %s (%d)", when, actionStr.c_str(), origAction);
 
   for (int i = 0; i < pointerCount; ++i)
   {
     PointerCoords coord = pointerCoords[i];
-    LOGV("    %d) x: %f, y: %f  pressure: %d", coord., coord.getAxisValue(AMOTION_EVENT_AXIS_X),
+    PointerProperties &property = mCurrentCookedState.cookedPointerData.pointerProperties[i];
+    LOGV("    %d) x: %f, y: %f  pressure: %f", property.id, coord.getAxisValue(AMOTION_EVENT_AXIS_X),
          coord.getAxisValue(AMOTION_EVENT_AXIS_Y), coord.getAxisValue(AMOTION_EVENT_AXIS_PRESSURE));
   }
 }

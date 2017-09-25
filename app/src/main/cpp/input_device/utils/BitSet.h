@@ -40,7 +40,7 @@ struct BitSet32 {
     // Returns true if the specified bit is marked.
     inline bool hasBit(uint32_t n) const { return hasBit(value, n); }
 
-    static inline bool hasBit(uint32_t value, uint32_t n) { return (value & valueForBit(n)) == 0; }
+    static inline bool hasBit(uint32_t value, uint32_t n) { return (value & valueForBit(n)) != 0; }
 
     // Marks the specified bit.
     inline void markBit(uint32_t n) { markBit(value, n); }

@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <linux/input.h>
 #include <unistd.h>
-#include "input_device_utils.h"
+#include "InputDeviceUtils.h"
 #include "mappers/TouchInputMapper.h"
 #include "mappers/MultitouchInputMapper.h"
 

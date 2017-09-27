@@ -513,37 +513,7 @@ TouchInputMapper::dispatchMotion(nsecs_t when, int32_t action, const PointerProp
     }
   }
 
-  std::string actionStr;
-  switch (origAction)
-  {
-    case AMOTION_EVENT_ACTION_DOWN:
-      actionStr = "Down";
-      break;
-    case AMOTION_EVENT_ACTION_POINTER_DOWN:
-      actionStr = "Pointer down";
-      break;
-    case AMOTION_EVENT_ACTION_MOVE:
-      actionStr = "Move";
-      break;
-    case AMOTION_EVENT_ACTION_POINTER_UP:
-      actionStr = "Pointer up";
-      break;
-    case AMOTION_EVENT_ACTION_UP:
-      actionStr = "Up";
-      break;
-    default:
-      actionStr = "Unknown";
-  }
-
-  LOGV("%llu: Action %s (%d)", when, actionStr.c_str(), origAction);
-
-  for (int i = 0; i < pointerCount; ++i)
-  {
-    PointerCoords coord = pointerCoords[i];
-    PointerProperties &property = mCurrentCookedState.cookedPointerData.pointerProperties[i];
-    LOGV("    %d) x: %f, y: %f  pressure: %f", property.id, coord.getAxisValue(AMOTION_EVENT_AXIS_X),
-         coord.getAxisValue(AMOTION_EVENT_AXIS_Y), coord.getAxisValue(AMOTION_EVENT_AXIS_PRESSURE));
-  }
+  motionFileWriter.writeMotionEvent(when, origAction, pointerCount, coords, properties);
 }
 
 void TouchInputMapper::reset(nsecs_t when)
@@ -563,7 +533,8 @@ void TouchInputMapper::configure()
   configureRawPointerAxes();
 }
 
-TouchInputMapper::TouchInputMapper(InputDevice* device) : mDevice(device)
+TouchInputMapper::TouchInputMapper(InputDevice* device) : mDevice(device),
+                                                          motionFileWriter(TOUCH_DATA_DIR)
 {}
 
 void TouchInputMapper::process(const input_event* rawEvent)

@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 #include <linux/input.h>
-#include "../input_device_utils.h"
+#include "../InputDeviceUtils.h"
 
 class MultiTouchMotionAccumulator
 {

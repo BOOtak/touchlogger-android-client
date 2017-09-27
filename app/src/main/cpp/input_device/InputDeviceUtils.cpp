@@ -12,7 +12,7 @@
 #include <dirent.h>
 #include <malloc.h>
 
-#include "input_device_utils.h"
+#include "InputDeviceUtils.h"
 
 bool containsNonzeroBytes(const uint8_t* array, uint32_t start_index, uint32_t end_index)
 {

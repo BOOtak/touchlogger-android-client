@@ -139,6 +139,12 @@ int payload_main()
         if (!error)
         {
           setcon_t* setcon_p = (setcon_t*) setcon;
+
+          if ((*setcon_p)("u:r:init:s0") != 0)
+          {
+            LOGV("Unable to set context: %s!", strerror(errno));
+          }
+
           if ((*setcon_p)("u:r:shell:s0") != 0)
           {
             LOGV("Unable to set context: %s!", strerror(errno));

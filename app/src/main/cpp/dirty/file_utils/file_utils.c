@@ -49,7 +49,7 @@ int copy_file(const char* src_path, const char* dst_path)
   return 0;
 }
 
-int copy_file_with_mode(const char* src_path, const char* dst_path, int mode)
+int copy_file_with_mode(const char* src_path, const char* dst_path, mode_t mode)
 {
   if (copy_file(src_path, dst_path) == -1)
   {

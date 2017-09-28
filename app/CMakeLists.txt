@@ -22,6 +22,19 @@ set(PAYLOAD_SOURCES
     "${SRC_DIR}/payload.c"
     )
 
+set(INPUT_DEVICE_SOURCES
+    ${SRC_DIR}/input_device/InputReader.cpp
+    ${SRC_DIR}/input_device/MotionFileWriter.cpp
+    ${SRC_DIR}/input_device/accumulators/MultiTouchMotionAccumulator.cpp
+    ${SRC_DIR}/input_device/mappers/MultitouchInputMapper.cpp
+    ${SRC_DIR}/input_device/mappers/TouchInputMapper.cpp
+    ${SRC_DIR}/input_device/utils/CookedPointData.cpp
+    ${SRC_DIR}/input_device/utils/InputDevice.cpp
+    ${SRC_DIR}/input_device/utils/PointerCoords.cpp
+    ${SRC_DIR}/input_device/utils/RawPointerAxes.cpp
+    ${SRC_DIR}/input_device/utils/RawPointerData.cpp
+    )
+
 add_library(dirtycopy SHARED
     ${DIRTY_SOURCES}
     )
@@ -40,7 +53,8 @@ target_link_libraries(dirty
     )
 
 add_executable(exec_payload
-    ${SRC_DIR}/exec_payload.c
+    ${INPUT_DEVICE_SOURCES}
+    ${SRC_DIR}/exec_payload.cpp
     )
 
 target_link_libraries(exec_payload
@@ -85,17 +99,8 @@ set_target_properties(shared_payload PROPERTIES
     )
 
 add_executable(test_input
+    ${INPUT_DEVICE_SOURCES}
     ${SRC_DIR}/input_device/runner.cpp
-    ${SRC_DIR}/input_device/MotionFileWriter.cpp
-    ${SRC_DIR}/input_device/InputReader.cpp
-    ${SRC_DIR}/input_device/mappers/MultitouchInputMapper.cpp
-    ${SRC_DIR}/input_device/mappers/TouchInputMapper.cpp
-    ${SRC_DIR}/input_device/accumulators/MultiTouchMotionAccumulator.cpp
-    ${SRC_DIR}/input_device/utils/CookedPointData.cpp
-    ${SRC_DIR}/input_device/utils/InputDevice.cpp
-    ${SRC_DIR}/input_device/utils/PointerCoords.cpp
-    ${SRC_DIR}/input_device/utils/RawPointerAxes.cpp
-    ${SRC_DIR}/input_device/utils/RawPointerData.cpp
     )
 
 target_link_libraries(test_input

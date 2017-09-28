@@ -16,12 +16,6 @@ public class PayloadWaitingService extends IntentService {
         super("PayloadWaitingService");
     }
 
-    public static void startWaitForPayload(Context context) {
-        Intent intent = new Intent(context, PayloadWaitingService.class);
-        intent.setAction(ACTION_WAIT_FOR_PAYLOAD);
-        context.startService(intent);
-    }
-
     @Override
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
@@ -38,8 +32,5 @@ public class PayloadWaitingService extends IntentService {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-        Toast.makeText(getApplicationContext(), R.string.msg_unable_to_wait_for_payload,
-                Toast.LENGTH_LONG).show();
     }
 }

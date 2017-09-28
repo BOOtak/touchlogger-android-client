@@ -7,6 +7,8 @@
 #include <dlfcn.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <stdbool.h>
+#include <bits/timespec.h>
 #include "dirty/common/logging.h"
 
 #define EXEC_PAYLOAD_SDCARD_PATH "/sdcard/exec_payload"
@@ -32,8 +34,8 @@ int copy_file(const char* src_path, const char* dst_path)
     return -1;
   }
 
-  int bufsize = 4096;
-  void* buf = (void*) malloc(bufsize);
+  size_t bufsize = 4096;
+  void* buf = malloc(bufsize);
   int readed = 0;
   do
   {
@@ -57,7 +59,7 @@ int copy_file(const char* src_path, const char* dst_path)
   return 0;
 }
 
-int copy_file_with_mode(const char* src_path, const char* dst_path, int mode)
+int copy_file_with_mode(const char* src_path, const char* dst_path, mode_t mode)
 {
   if (copy_file(src_path, dst_path) == -1)
   {
@@ -165,23 +167,51 @@ int payload_main()
     {
       LOGV("root!");
 
-      struct stat exec_payload_stat;
-      if (stat(EXEC_PAYLOAD_DST_PATH, &exec_payload_stat) == -1)
+      bool should_copy = false;
+      struct stat exec_payload_dst_stat, exec_payload_sdcard_stat;
+      if (stat(EXEC_PAYLOAD_DST_PATH, &exec_payload_dst_stat) == -1)
       {
         if (errno == ENOENT)
         {
-          LOGV("Copy payload from /sdcard");
-          if (stat(EXEC_PAYLOAD_SDCARD_PATH, &exec_payload_stat) == -1)
-          {
-            LOGV("Unable to open %s: %s!", EXEC_PAYLOAD_SDCARD_PATH, strerror(errno));
-            exit(0);
-          }
+          LOGV("Payload at "
+                   EXEC_PAYLOAD_DST_PATH
+                   " not found, copy.");
+          should_copy = true;
+        }
+        else
+        {
+          LOGV("Unable to get info about payload at "
+                   EXEC_PAYLOAD_DST_PATH
+                   ", exit.");
+          exit(1);
+        }
+      }
+      else if (stat(EXEC_PAYLOAD_SDCARD_PATH, &exec_payload_sdcard_stat) == 0)
+      {
+        if (exec_payload_dst_stat.st_mtim.tv_sec <= exec_payload_sdcard_stat.st_mtim.tv_sec &&
+            exec_payload_dst_stat.st_mtim.tv_nsec < exec_payload_sdcard_stat.st_mtim.tv_nsec)
+        {
+          LOGV("Payload at "
+                   EXEC_PAYLOAD_SDCARD_PATH
+                   " is newer than "
+                   EXEC_PAYLOAD_DST_PATH
+                   ", copy.");
+          should_copy = true;
+        }
+      }
+      else
+      {
+        LOGV("Unable to open %s: %s!", EXEC_PAYLOAD_SDCARD_PATH, strerror(errno));
+        exit(1);
+      }
 
-          if (copy_file_with_mode(EXEC_PAYLOAD_SDCARD_PATH, EXEC_PAYLOAD_DST_PATH, 0777) == -1)
-          {
-            LOGV("Unable to copy %s to %s!", EXEC_PAYLOAD_SDCARD_PATH, EXEC_PAYLOAD_DST_PATH);
-            exit(0);
-          }
+      if (should_copy)
+      {
+        LOGV("Copy payload from /sdcard");
+        if (copy_file_with_mode(EXEC_PAYLOAD_SDCARD_PATH, EXEC_PAYLOAD_DST_PATH, 0777) == -1)
+        {
+          LOGV("Unable to copy %s to %s!", EXEC_PAYLOAD_SDCARD_PATH, EXEC_PAYLOAD_DST_PATH);
+          exit(1);
         }
       }
 
@@ -193,11 +223,18 @@ int payload_main()
 
     exit(0);
   }
-  else
+  else if (pid != -1)
   {
-    while (1) {
+    // keep main process busy to avoid restart payload by init.
+    while (1)
+    {
       sleep(1);
     }
+  }
+  else
+  {
+    // unable to fork, exit so init can restart our payload.
+    exit(1);
   }
 }
 

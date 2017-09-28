@@ -23,19 +23,14 @@
             </intent-filter>
         </activity>
 
-        <receiver
-            android:name=".receiver.BootReceiver"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-            </intent-filter>
-        </receiver>
-
         <service
             android:name=".service.PayloadWaitingService"
-            android:exported="false"
+            android:exported="true"
             android:process="touchlogger.here">
+        </service>
+        <service
+            android:name=".service.FloatingIndicationService"
+            android:exported="false">
         </service>
     </application>
 

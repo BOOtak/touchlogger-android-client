@@ -513,7 +513,7 @@ TouchInputMapper::dispatchMotion(nsecs_t when, int32_t action, const PointerProp
     }
   }
 
-  motionFileWriter.writeMotionEvent(when, origAction, pointerCount, coords, properties);
+  motionFileWriter.writeMotionEvent(when, origAction, changedId, pointerCount, coords, properties);
 }
 
 void TouchInputMapper::reset(nsecs_t when)

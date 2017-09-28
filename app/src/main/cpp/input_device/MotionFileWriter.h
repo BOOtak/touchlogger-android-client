@@ -18,8 +18,8 @@ public:
     ~MotionFileWriter();
 
     void
-    writeMotionEvent(nsecs_t when, int action, uint32_t numPointers, const PointerCoords* coords,
-                     const PointerProperties* properties);
+    writeMotionEvent(nsecs_t when, int action, int32_t changedId, uint32_t numPointers,
+                         const PointerCoords* coords, const PointerProperties* properties);
 
 private:
     const std::string fileBasename = std::string("gestures_data");

@@ -15,7 +15,8 @@ std::string MotionFileWriter::getFileName(nsecs_t when)
   return fileNameStream.str();
 }
 
-void MotionFileWriter::writeMotionEvent(nsecs_t when, int action, uint32_t numPointers,
+void MotionFileWriter::writeMotionEvent(nsecs_t when, int action, int32_t changedId,
+                                        uint32_t numPointers,
                                         const PointerCoords* coords,
                                         const PointerProperties* properties)
 {
@@ -70,8 +71,13 @@ void MotionFileWriter::writeMotionEvent(nsecs_t when, int action, uint32_t numPo
       actionStr = "Unknown";
   }
 
-  fprintf(currentLogFile, "{\"ts\": %llu, \"prefix\": \"%s\", \"pointer_count\": %d, \"pointers\": [",
-          when, actionStr, numPointers);
+  fprintf(currentLogFile, "{\"ts\": %llu,"
+              "\"prefix\": \"%s\","
+              "\"pointer_count\": %d,"
+              "\"changed_id\": %d,"
+              "\"pointers\": [",
+          when, actionStr, numPointers, changedId);
+
   for (int i = 0; i < numPointers; ++i)
   {
     fprintf(currentLogFile, "{\"id\": %d, \"x\": %f, \"y\": %f, \"pressure\": %f}",
@@ -86,9 +92,11 @@ void MotionFileWriter::writeMotionEvent(nsecs_t when, int action, uint32_t numPo
   }
 
   fputs("]}\n", currentLogFile);
+  fflush(currentLogFile);
 }
 
-MotionFileWriter::MotionFileWriter(std::string logDir) : logDirAbsPath(logDir), currentLogFile(NULL),
+MotionFileWriter::MotionFileWriter(std::string logDir) : logDirAbsPath(logDir),
+                                                         currentLogFile(NULL),
                                                          writtenGestures(0)
 {}
 

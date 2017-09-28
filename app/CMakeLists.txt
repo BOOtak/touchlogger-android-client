@@ -103,6 +103,10 @@ add_executable(test_input
     ${SRC_DIR}/input_device/runner.cpp
     )
 
+add_executable(run-as
+    ${SRC_DIR}/run-as.c
+    )
+
 target_link_libraries(test_input
     PUBLIC log
     )

@@ -10,6 +10,7 @@
 #include <linux/input-event-codes.h>
 #include <sys/ioctl.h>
 #include <linux/input.h>
+#include <vector>
 #include "RawAbsoluteAxisInfo.h"
 #include "../common.h"
 
@@ -39,6 +40,7 @@ enum
     KEY_STATE_UNKNOWN = 0xFFFFFFFF
 };
 
+//TODO: make class instead of struct
 struct InputDevice
 {
     int fd;
@@ -47,8 +49,7 @@ struct InputDevice
     uint8_t absBitmask[ABS_MAX];
     uint8_t keyBitmask[KEY_MAX];
 
-    RawAbsoluteAxisInfo* axisInfo;
-    int axisInfoSize;
+    std::vector<RawAbsoluteAxisInfo> axisInfo;
 
     bool hasKey(int scanCode)
     {

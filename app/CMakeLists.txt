@@ -85,9 +85,9 @@ set_target_properties(shared_payload PROPERTIES
     )
 
 add_executable(test_input
-    ${SRC_DIR}/input_device/InputDeviceUtils.cpp
-    ${SRC_DIR}/input_device/MotionFileWriter.cpp
     ${SRC_DIR}/input_device/runner.cpp
+    ${SRC_DIR}/input_device/MotionFileWriter.cpp
+    ${SRC_DIR}/input_device/InputReader.cpp
     ${SRC_DIR}/input_device/mappers/MultitouchInputMapper.cpp
     ${SRC_DIR}/input_device/mappers/TouchInputMapper.cpp
     ${SRC_DIR}/input_device/accumulators/MultiTouchMotionAccumulator.cpp

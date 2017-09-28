@@ -22,7 +22,7 @@ public:
                          const PointerCoords* coords, const PointerProperties* properties);
 
 private:
-    const std::string fileBasename = std::string("gestures_data");
+    const std::string fileBasename = std::string("touch_event_data");
     FILE* currentLogFile;
     std::string logDirAbsPath;
     uint32_t writtenGestures;

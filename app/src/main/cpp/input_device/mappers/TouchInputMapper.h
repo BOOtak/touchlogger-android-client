@@ -10,8 +10,8 @@
 #include "../utils/CookedState.h"
 #include "../utils/RawAbsoluteAxisInfo.h"
 #include "../utils/RawPointerAxes.h"
-#include "../InputDeviceUtils.h"
 #include "../MotionFileWriter.h"
+#include "../utils/InputDevice.h"
 #include <vector>
 #include <linux/input.h>
 

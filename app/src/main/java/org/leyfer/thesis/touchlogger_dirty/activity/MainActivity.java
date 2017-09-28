@@ -145,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
                     if (!Settings.canDrawOverlays(this)) {
                         showErrorDialog("Unable to show overlay with coordinates!");
                     } else {
-                        Log.d(TAG, "Can draw pverlays!");
+                        Log.d(TAG, "Can draw overlays!");
                     }
                 }
             default:

@@ -92,6 +92,7 @@ void MotionFileWriter::writeMotionEvent(nsecs_t when, int action, int32_t change
   }
 
   fputs("]}\n", currentLogFile);
+  writtenGestures++;
   fflush(currentLogFile);
 }
 

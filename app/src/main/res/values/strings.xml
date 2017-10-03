@@ -12,4 +12,7 @@
     <string name="button_action_text">Make Some Fun!</string>
     <string name="msg_waiting_response">Waiting response from payload…</string>
     <string name="msg_unable_to_wait_for_payload">Unable to wait for response from exec_payload!</string>
+    <string name="_x">x:</string>
+    <string name="_y">y:</string>
+    <string name="_0">0</string>
 </resources>

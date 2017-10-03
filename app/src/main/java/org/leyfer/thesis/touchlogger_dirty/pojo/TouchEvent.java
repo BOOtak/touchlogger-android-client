@@ -1,0 +1,64 @@
+package org.leyfer.thesis.touchlogger_dirty.pojo;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.List;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class TouchEvent {
+    @JsonProperty("ts")
+    private Long timestamp;
+
+    @JsonProperty("prefix")
+    private String prefix;
+
+    @JsonProperty("pointer_count")
+    private Integer pointerCount;
+
+    @JsonProperty("changed_id")
+    private Integer changedId;
+
+    @JsonProperty("pointers")
+    private List<Pointer> pointers;
+
+    public Long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public String getPrefix() {
+        return prefix;
+    }
+
+    public void setPrefix(String prefix) {
+        this.prefix = prefix;
+    }
+
+    public Integer getPointerCount() {
+        return pointerCount;
+    }
+
+    public void setPointerCount(Integer pointerCount) {
+        this.pointerCount = pointerCount;
+    }
+
+    public Integer getChangedId() {
+        return changedId;
+    }
+
+    public void setChangedId(Integer changedId) {
+        this.changedId = changedId;
+    }
+
+    public List<Pointer> getPointers() {
+        return pointers;
+    }
+
+    public void setPointers(List<Pointer> pointers) {
+        this.pointers = pointers;
+    }
+}

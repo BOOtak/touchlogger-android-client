@@ -23,6 +23,7 @@ import android.widget.TextView;
 import org.leyfer.thesis.touchlogger_dirty.R;
 import org.leyfer.thesis.touchlogger_dirty.dialog.ErrorAlertDialog;
 import org.leyfer.thesis.touchlogger_dirty.handler.InjectProgressHandler;
+import org.leyfer.thesis.touchlogger_dirty.service.FloatingIndicationService;
 import org.leyfer.thesis.touchlogger_dirty.utils.Config;
 import org.leyfer.thesis.touchlogger_dirty.utils.JniApi;
 
@@ -66,7 +67,11 @@ public class MainActivity extends AppCompatActivity {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     if (!Settings.canDrawOverlays(this)) {
                         requestOverlayWindow();
+                    } else {
+                        showFloatingIndicator();
                     }
+                } else {
+                    showFloatingIndicator();
                 }
             } else {
                 tv.setText(JniApi.stringFromJNI());
@@ -101,6 +106,11 @@ public class MainActivity extends AppCompatActivity {
         }
 
         checkSDCardPermission();
+    }
+
+    private void showFloatingIndicator() {
+        Intent floatingIndicatorIntent = new Intent(MainActivity.this, FloatingIndicationService.class);
+        startService(floatingIndicatorIntent);
     }
 
     private boolean unpackAssets() {
@@ -145,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
                     if (!Settings.canDrawOverlays(this)) {
                         showErrorDialog("Unable to show overlay with coordinates!");
                     } else {
-                        Log.d(TAG, "Can draw overlays!");
+                        showFloatingIndicator();
                     }
                 }
             default:

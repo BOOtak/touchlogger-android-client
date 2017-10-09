@@ -7,6 +7,36 @@ import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TouchEvent {
+    public enum Prefix {
+        UP("Up"),
+        DOWN("Down"),
+        POINTER_DOWN("Pointer down"),
+        PONITER_UP("Pointer up"),
+        MOVE("Move"),
+        UNKNOWN("Unknown");
+
+        private String name;
+
+        Prefix(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
+
+        public static Prefix fromString(String name) {
+            for (Prefix prefix : Prefix.values()) {
+                if (prefix.toString().equals(name)) {
+                    return prefix;
+                }
+            }
+
+            return UNKNOWN;
+        }
+    }
+
     @JsonProperty("ts")
     private Long timestamp;
 

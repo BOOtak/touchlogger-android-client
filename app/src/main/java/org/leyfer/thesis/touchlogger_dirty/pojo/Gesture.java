@@ -3,9 +3,7 @@ package org.leyfer.thesis.touchlogger_dirty.pojo;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -30,11 +28,13 @@ public class Gesture {
         this.touchEvents = new ArrayList<>(touchEvents);
         this.timestamp = touchEvents.get(0).getTimestamp();
         int maxPointerCountInGesture = 0;
-        for (TouchEvent touchEvent: touchEvents) {
+        for (TouchEvent touchEvent : touchEvents) {
             if (maxPointerCountInGesture < touchEvent.getPointerCount()) {
                 maxPointerCountInGesture = touchEvent.getPointerCount();
             }
         }
+
+        maxPointerCount = maxPointerCountInGesture;
 
         this.length = touchEvents.get(touchEvents.size() - 1).getTimestamp()
                 - touchEvents.get(0).getTimestamp();

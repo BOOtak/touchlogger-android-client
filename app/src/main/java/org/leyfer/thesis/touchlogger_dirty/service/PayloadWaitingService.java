@@ -2,14 +2,13 @@ package org.leyfer.thesis.touchlogger_dirty.service;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.util.Log;
 
-import org.leyfer.thesis.touchlogger_dirty.InputDataReader;
-import org.leyfer.thesis.touchlogger_dirty.utils.Config;
+import org.leyfer.thesis.touchlogger_dirty.activity.MainActivity;
 
 public class PayloadWaitingService extends IntentService {
     private static final String ACTION_WAIT_FOR_PAYLOAD =
             "org.leyfer.thesis.touchlogger_dirty.service.action.WAIT_FOR_PAYLOAD";
-    private static final long PAYLOAD_WAITING_TIME = 15 * 1000;  // ms
 
     public PayloadWaitingService() {
         super("PayloadWaitingService");
@@ -26,8 +25,7 @@ public class PayloadWaitingService extends IntentService {
     }
 
     private void handleActionWaitForPayload() {
-        new InputDataReader(
-                Config.TOUCH_DATA_FILE_BASE_NAME, Config.INPUT_DATA_DIR, getApplicationContext()
-        ).start();
+        Log.d(MainActivity.TAG, "Got kicked by exec payload, start gesture collection!");
+        GestureBuilderService.startActionConstructGestures(getApplicationContext());
     }
 }

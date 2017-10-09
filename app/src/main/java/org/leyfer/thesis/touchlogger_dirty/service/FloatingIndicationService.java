@@ -8,6 +8,7 @@ import android.os.Build;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -21,6 +22,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 import org.leyfer.thesis.touchlogger_dirty.R;
+import org.leyfer.thesis.touchlogger_dirty.activity.MainActivity;
 import org.leyfer.thesis.touchlogger_dirty.event.TouchCoordinatesEvent;
 
 import static android.view.MotionEvent.ACTION_DOWN;
@@ -38,6 +40,9 @@ public class FloatingIndicationService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         EventBus.getDefault().register(this);
+
+        Log.d(MainActivity.TAG, String.format("Registered: %b",
+                EventBus.getDefault().hasSubscriberForEvent(TouchCoordinatesEvent.class)));
 
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
@@ -117,6 +122,9 @@ public class FloatingIndicationService extends Service {
     public void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
+
+        Log.d(MainActivity.TAG, String.format("Unregistered: %b",
+                EventBus.getDefault().hasSubscriberForEvent(TouchCoordinatesEvent.class)));
 
         if (mIndicatorView != null) {
             mWindowManager.removeView(mIndicatorView);

@@ -25,7 +25,7 @@ public class RestartZygoteAlertDialog extends AlertDialog {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        JniApi.triggerLogger();
+                        JniApi.triggerA();
                         handler.sendEmptyMessage(InjectProgressHandler.TRIGGER_SUCCESS);
                     }
                 }).start();

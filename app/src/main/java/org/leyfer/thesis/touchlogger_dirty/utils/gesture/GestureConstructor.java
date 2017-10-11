@@ -1,4 +1,4 @@
-package org.leyfer.thesis.touchlogger_dirty.utils;
+package org.leyfer.thesis.touchlogger_dirty.utils.gesture;
 
 import android.util.Log;
 

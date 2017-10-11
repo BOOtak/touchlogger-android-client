@@ -17,10 +17,10 @@ import org.leyfer.thesis.touchlogger_dirty.exception.InvalidTouchEventDataExcept
 import org.leyfer.thesis.touchlogger_dirty.pojo.Gesture;
 import org.leyfer.thesis.touchlogger_dirty.pojo.Pointer;
 import org.leyfer.thesis.touchlogger_dirty.pojo.TouchEvent;
-import org.leyfer.thesis.touchlogger_dirty.utils.DirectoryMonitor;
-import org.leyfer.thesis.touchlogger_dirty.utils.FileListPoller;
-import org.leyfer.thesis.touchlogger_dirty.utils.GestureConstructor;
 import org.leyfer.thesis.touchlogger_dirty.utils.SPWrapper;
+import org.leyfer.thesis.touchlogger_dirty.utils.file.DirectoryMonitor;
+import org.leyfer.thesis.touchlogger_dirty.utils.file.FileListPoller;
+import org.leyfer.thesis.touchlogger_dirty.utils.gesture.GestureConstructor;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -37,6 +37,7 @@ public class InputDataReader {
 
     private FileListPoller fileListPoller;
     private GestureConstructor gestureConstructor;
+    private DirectoryMonitor directoryMonitor;
 
     public InputDataReader(String touchInputFileBaseName, String inputDataDirPath, Context context) {
         this.touchInputFileBaseName = touchInputFileBaseName;
@@ -48,13 +49,15 @@ public class InputDataReader {
         Log.d(MainActivity.TAG, "Start processing input data!");
         final SPWrapper spWrapper = new SPWrapper(context);
 
-        new DirectoryMonitor(new File(inputDataDirPath),
+        directoryMonitor = new DirectoryMonitor(new File(inputDataDirPath),
                 Pattern.compile(touchInputFileBaseName + "_[0-9]+\\.log")) {
             @Override
             public void onFileAdded(File newFile) {
                 EventBus.getDefault().post(new NewMatchingFileEvent(newFile));
             }
-        }.start();
+        };
+
+        directoryMonitor.start();
 
         gestureConstructor = new GestureConstructor(Settings.Secure.getString(
                 context.getContentResolver(), Settings.Secure.ANDROID_ID)) {
@@ -127,6 +130,9 @@ public class InputDataReader {
 
     public void stop() {
         setStop(true);
+        if (directoryMonitor != null) {
+            directoryMonitor.stop();
+        }
     }
 
     private synchronized boolean shouldStop() {

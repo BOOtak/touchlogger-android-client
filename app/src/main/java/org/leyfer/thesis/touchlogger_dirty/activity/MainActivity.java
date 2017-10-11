@@ -29,7 +29,7 @@ import org.leyfer.thesis.touchlogger_dirty.utils.JniApi;
 
 import java.io.File;
 
-import static org.leyfer.thesis.touchlogger_dirty.utils.FileUtils.unpackAsset;
+import static org.leyfer.thesis.touchlogger_dirty.utils.file.FileUtils.unpackAsset;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            if (JniApi.prepare(MainActivity.this.getFilesDir().getAbsolutePath())) {
+                            if (JniApi.prepareA(MainActivity.this.getFilesDir().getAbsolutePath())) {
                                 Log.d(TAG, "Patching target library finished!");
                                 mHandler.sendEmptyMessage(
                                         InjectProgressHandler.PREPARE_SUCCESS);

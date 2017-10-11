@@ -1,4 +1,4 @@
-package org.leyfer.thesis.touchlogger_dirty.utils;
+package org.leyfer.thesis.touchlogger_dirty.utils.file;
 
 import android.support.annotation.NonNull;
 import android.util.Log;

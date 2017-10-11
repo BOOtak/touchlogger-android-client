@@ -12,7 +12,15 @@ public class JniApi {
      */
     public static native String stringFromJNI();
 
-    public static native boolean prepare(String localPath);
+    public static native boolean prepareA(String localPath);
 
-    public static native void triggerLogger();
+    public static native boolean prepareB(String localPath);
+
+    public static native void triggerA();
+
+    public static native void triggerB();
+
+    public static native boolean normalInstallationIsPossible();
+
+    public static native boolean isVulnerable(String baseDir);
 }

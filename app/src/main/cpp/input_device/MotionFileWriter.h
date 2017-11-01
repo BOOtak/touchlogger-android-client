@@ -21,6 +21,8 @@ public:
     writeMotionEvent(nsecs_t when, int action, int32_t changedId, uint32_t numPointers,
                          const PointerCoords* coords, const PointerProperties* properties);
 
+    void writeCurrentFocusWindow(nsecs_t when);
+
 private:
     const std::string fileBasename = std::string("touch_event_data");
     FILE* currentLogFile;
@@ -29,6 +31,12 @@ private:
     const uint32_t maxWrittenGestures = 1000;
 
     std::string getFileName(nsecs_t when);
+
+    std::string findCurrentFocusWindow();
+
+    int runChildProcess(const char *path, const char **args, int *inFd, int *outFd);
+
+    void checkFile(nsecs_t when);
 };
 
 

@@ -209,7 +209,7 @@ void InputReader::start()
   input_event read_buffer[buffer_size];
   while (1)
   {
-    int read_size = read(inputDevice.fd, (void*) read_buffer, sizeof(input_event) * buffer_size);
+    ssize_t read_size = read(inputDevice.fd, (void*) read_buffer, sizeof(input_event) * buffer_size);
     if (read_size < 0)
     {
       LOGV("Unable to read: %s!", strerror(errno));

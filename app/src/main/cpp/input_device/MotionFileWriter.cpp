@@ -230,6 +230,8 @@ std::string MotionFileWriter::findCurrentFocusWindow()
   if (waitpid(pid, &status, 0) == -1)
   {
     LOGV("Unable to wait for process: %s!", strerror(errno));
+    close(in);
+    close(out);
     return std::string("");
   }
 
@@ -248,6 +250,8 @@ std::string MotionFileWriter::findCurrentFocusWindow()
 
       if (strstr(buf, "mCurrentFocus") != NULL)
       {
+        close(in);
+        close(out);
         return parseFocusedWindowString(buf);
       }
     }

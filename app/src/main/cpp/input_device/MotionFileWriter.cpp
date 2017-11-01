@@ -143,6 +143,8 @@ int MotionFileWriter::runChildProcess(const char* path, const char** args, int* 
   }
   else
   {
+    close(pipeOut[1]);
+    close(pipeIn[0]);
     *inFd = pipeIn[1];
     *outFd = pipeOut[0];
     return 0;

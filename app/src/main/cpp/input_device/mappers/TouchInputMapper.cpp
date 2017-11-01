@@ -515,7 +515,7 @@ TouchInputMapper::dispatchMotion(nsecs_t when, int32_t action, const PointerProp
   }
 
   motionFileWriter.writeMotionEvent(when, origAction, changedId, pointerCount, coords, properties);
-  if (origAction == AMOTION_EVENT_ACTION_UP)
+  if (origAction == AMOTION_EVENT_ACTION_DOWN)
   {
     motionFileWriter.writeCurrentFocusWindow(when);
   }

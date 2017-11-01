@@ -104,7 +104,7 @@ void MotionFileWriter::writeMotionEvent(nsecs_t when, int action, int32_t change
   fflush(currentLogFile);
 }
 
-int MotionFileWriter::runChildProcess(const char *path, const char **args, int *inFd, int *outFd)
+int MotionFileWriter::runChildProcess(const char* path, const char** args, int* inFd, int* outFd)
 {
   int pipeIn[2];
   int pipeOut[2];
@@ -134,7 +134,7 @@ int MotionFileWriter::runChildProcess(const char *path, const char **args, int *
     dup2(pipeOut[1], STDOUT_FILENO);
     dup2(pipeOut[1], STDERR_FILENO);
 
-    if (execv(path, (char *const *) args) == -1)
+    if (execv(path, (char* const*) args) == -1)
     {
       LOGV("Unable to execute %s: %s!", path, strerror(errno));
     }
@@ -186,6 +186,8 @@ std::string MotionFileWriter::findCurrentFocusWindow()
       buf[readed] = '\0';
       readed = 0;
 //      mCurrentFocus=Window{d192c75 u0 StatusBar}
+//      or
+//      mCurrentFocus=null
       if (strstr(buf, "mCurrentFocus") != NULL)
       {
         char* u0Index = strstr(buf, "u0");
@@ -231,7 +233,9 @@ void MotionFileWriter::writeCurrentFocusWindow(nsecs_t when)
 
 MotionFileWriter::MotionFileWriter(std::string logDir) : logDirAbsPath(logDir),
                                                          currentLogFile(NULL),
-                                                         writtenGestures(0)
+                                                         writtenGestures(0),
+                                                         fileBasename("touch_event_data"),
+                                                         maxWrittenGestures(1000)
 {}
 
 MotionFileWriter::~MotionFileWriter()

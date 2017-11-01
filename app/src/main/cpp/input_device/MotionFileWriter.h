@@ -24,11 +24,11 @@ public:
     void writeCurrentFocusWindow(nsecs_t when);
 
 private:
-    const std::string fileBasename = std::string("touch_event_data");
+    const std::string fileBasename;
     FILE* currentLogFile;
     std::string logDirAbsPath;
     uint32_t writtenGestures;
-    const uint32_t maxWrittenGestures = 1000;
+    const uint32_t maxWrittenGestures;
 
     std::string getFileName(nsecs_t when);
 

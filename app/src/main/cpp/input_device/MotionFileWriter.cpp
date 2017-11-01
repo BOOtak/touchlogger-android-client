@@ -149,6 +149,67 @@ int MotionFileWriter::runChildProcess(const char* path, const char** args, int* 
   }
 }
 
+std::string MotionFileWriter::parseFocusedWindowString(const char* focusedWindowString)
+{
+//  mCurrentFocus=Window{d192c75 u0 StatusBar}
+//  or
+//  mCurrentFocus=null
+//  or
+//  mCurrentFocus=Window{42d3cd18 u0 com.cooee.phenix/com.cooee.phenix.Launcher}
+//  or
+//  mCurrentFocus=Window{42310f20 com.test/com.test.MainActivity paused=false}
+  char window[4096];
+  memset(window, 0, 4096);
+  const char* windowIndex = strstr(focusedWindowString, "Window{");
+  if (windowIndex != NULL)
+  {
+    printf("here: %d %s!\n", __LINE__, focusedWindowString);
+    const char* u0Index = NULL;
+    if ((u0Index = strstr(focusedWindowString, "u0")) != NULL)
+    {
+      int scanned = -1;
+      printf("here: %d!\n", __LINE__);
+      if ((scanned = sscanf(u0Index, "u0 %s", window)) == 1)
+      {
+        printf("here: %d!\n", __LINE__);
+        char* index;
+        if ((index = strrchr(window, '}')) != NULL)
+        {
+          printf("here: %d!\n", __LINE__);
+          *index = '\0';
+        }
+
+        printf("here: %d!\n", __LINE__);
+        return std::string(window);
+      }
+      else
+      {
+        printf("sscanf returned %d: %s\n", scanned, strerror(errno));
+      }
+    }
+    else
+    {
+      printf("here: %d!\n", __LINE__);
+      long addr = -1;
+      if (sscanf(windowIndex, "Window{%lx %s", &addr, window) == 2)
+      {
+        printf("here: %d!\n", __LINE__);
+        char* index;
+        if ((index = strrchr(window, '}')) != NULL)
+        {
+          printf("here: %d!\n", __LINE__);
+          *index = '\0';
+        }
+
+        printf("here: %d!\n", __LINE__);
+        return std::string(window);
+      }
+    }
+  }
+
+  return std::string("null");
+}
+
 std::string MotionFileWriter::findCurrentFocusWindow()
 {
   int in = -1, out = -1;
@@ -164,7 +225,6 @@ std::string MotionFileWriter::findCurrentFocusWindow()
   char buf[4096];
   char c;
   int readed = 0;
-  char window[4096];
 
   int status = 0;
   if (waitpid(pid, &status, 0) == -1)
@@ -185,32 +245,10 @@ std::string MotionFileWriter::findCurrentFocusWindow()
     {
       buf[readed] = '\0';
       readed = 0;
-//      mCurrentFocus=Window{d192c75 u0 StatusBar}
-//      or
-//      mCurrentFocus=null
+
       if (strstr(buf, "mCurrentFocus") != NULL)
       {
-        char* u0Index = strstr(buf, "u0");
-        if (u0Index != NULL)
-        {
-          memset(window, 0, 4096);
-          if (sscanf(u0Index, "u0 %s}", window) == 1)
-          {
-            char* index;
-            if ((index = strrchr(window, '}')) != NULL)
-            {
-              *index = '\0';
-            }
-
-            close(in);
-            close(out);
-            return std::string(window);
-          }
-        }
-        else
-        {
-          return std::string("null");
-        }
+        return parseFocusedWindowString(buf);
       }
     }
   }

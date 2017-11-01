@@ -37,6 +37,8 @@ private:
     int runChildProcess(const char *path, const char **args, int *inFd, int *outFd);
 
     void checkFile(nsecs_t when);
+
+  std::string parseFocusedWindowString(const char* focusedWindowString);
 };
 
 

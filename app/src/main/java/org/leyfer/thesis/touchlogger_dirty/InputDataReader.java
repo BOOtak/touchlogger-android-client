@@ -4,7 +4,9 @@ import android.content.Context;
 import android.provider.Settings;
 import android.util.Log;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -14,9 +16,12 @@ import org.leyfer.thesis.touchlogger_dirty.event.NewMatchingFileEvent;
 import org.leyfer.thesis.touchlogger_dirty.event.TouchCoordinatesEvent;
 import org.leyfer.thesis.touchlogger_dirty.exception.FileIsNotDirectoryException;
 import org.leyfer.thesis.touchlogger_dirty.exception.InvalidTouchEventDataException;
+import org.leyfer.thesis.touchlogger_dirty.pojo.Event;
 import org.leyfer.thesis.touchlogger_dirty.pojo.Gesture;
+import org.leyfer.thesis.touchlogger_dirty.pojo.HeartBeat;
 import org.leyfer.thesis.touchlogger_dirty.pojo.Pointer;
 import org.leyfer.thesis.touchlogger_dirty.pojo.TouchEvent;
+import org.leyfer.thesis.touchlogger_dirty.pojo.Window;
 import org.leyfer.thesis.touchlogger_dirty.utils.SPWrapper;
 import org.leyfer.thesis.touchlogger_dirty.utils.file.DirectoryMonitor;
 import org.leyfer.thesis.touchlogger_dirty.utils.file.FileListPoller;
@@ -26,6 +31,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 public class InputDataReader {
@@ -48,6 +56,12 @@ public class InputDataReader {
     private void processInputData() throws FileNotFoundException, FileIsNotDirectoryException {
         Log.d(MainActivity.TAG, "Start processing input data!");
         final SPWrapper spWrapper = new SPWrapper(context);
+
+        Map<String, Class<? extends Event>> eventsMap = new HashMap<>();
+        eventsMap.put("pointer_count", TouchEvent.class);
+        eventsMap.put("window", Window.class);
+        eventsMap.put("online", HeartBeat.class);
+        final EventDeserializer eventDeserializer = new EventDeserializer(eventsMap);
 
         directoryMonitor = new DirectoryMonitor(new File(inputDataDirPath),
                 Pattern.compile(touchInputFileBaseName + "_[0-9]+\\.log")) {
@@ -93,17 +107,24 @@ public class InputDataReader {
 
             @Override
             public void onNewLine(String newLine) {
-                TouchEvent touchEvent;
                 try {
-                    touchEvent = new ObjectMapper().readValue(newLine,
-                            TouchEvent.class);
+                    Event event = eventDeserializer.deserialize(newLine);
+                    if (event instanceof TouchEvent) {
+                        Log.d(MainActivity.TAG, "TouchEvent");
+
+                        if (gestureConstructor != null) {
+                            gestureConstructor.addTouchEvent((TouchEvent) event);
+                        }
+                    } else if (event instanceof HeartBeat) {
+                        Log.d(MainActivity.TAG, "HeartBeat");
+                    } else if (event instanceof Window) {
+                        Log.d(MainActivity.TAG, "Window");
+                    } else {
+                        Log.d(MainActivity.TAG, "Unknown object");
+                    }
                 } catch (IOException e) {
                     throw new InvalidTouchEventDataException(
                             "Unable to create touch event from string!", e);
-                }
-
-                if (gestureConstructor != null) {
-                    gestureConstructor.addTouchEvent(touchEvent);
                 }
             }
         };
@@ -141,5 +162,26 @@ public class InputDataReader {
 
     private synchronized void setStop(boolean stop) {
         this.stop = stop;
+    }
+
+    private class EventDeserializer {
+        private final Map<String, Class<? extends Event>> eventsMap;
+        EventDeserializer(Map<String, Class<? extends Event>> eventsMap) {
+            this.eventsMap = eventsMap;
+        }
+
+        Event deserialize(String serializedEvent) throws IOException {
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode node = (ObjectNode) mapper.readTree(serializedEvent);
+            Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
+            while (fields.hasNext()) {
+                Map.Entry<String, JsonNode> field = fields.next();
+                if (eventsMap.containsKey(field.getKey())) {
+                    return mapper.readValue(serializedEvent, eventsMap.get(field.getKey()));
+                }
+            }
+
+            return null;
+        }
     }
 }

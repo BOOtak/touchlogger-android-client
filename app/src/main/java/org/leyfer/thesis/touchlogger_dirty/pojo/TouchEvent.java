@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class TouchEvent {
+public class TouchEvent extends Event {
     public enum Prefix {
         UP("Up"),
         DOWN("Down"),
@@ -37,9 +37,6 @@ public class TouchEvent {
         }
     }
 
-    @JsonProperty("ts")
-    private Long timestamp;
-
     @JsonProperty("prefix")
     private String prefix;
 
@@ -51,14 +48,6 @@ public class TouchEvent {
 
     @JsonProperty("pointers")
     private List<Pointer> pointers;
-
-    public Long getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(Long timestamp) {
-        this.timestamp = timestamp;
-    }
 
     public String getPrefix() {
         return prefix;

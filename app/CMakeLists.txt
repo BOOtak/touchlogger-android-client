@@ -23,8 +23,8 @@ set(PAYLOAD_SOURCES
     )
 
 set(INPUT_DEVICE_SOURCES
+    ${SRC_DIR}/input_device/EventFileWriter.cpp
     ${SRC_DIR}/input_device/InputReader.cpp
-    ${SRC_DIR}/input_device/MotionFileWriter.cpp
     ${SRC_DIR}/input_device/accumulators/MultiTouchMotionAccumulator.cpp
     ${SRC_DIR}/input_device/mappers/MultitouchInputMapper.cpp
     ${SRC_DIR}/input_device/mappers/TouchInputMapper.cpp

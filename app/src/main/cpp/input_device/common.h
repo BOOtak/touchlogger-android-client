@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <asm/errno.h>
 
-#define TOUCH_DATA_DIR "/sdcard/touch_logger"
+#define EVENT_DATA_DIR "/sdcard/touch_logger"
 
 typedef int64_t nsecs_t; // nano-seconds typedef
 typedef int32_t status_t;

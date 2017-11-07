@@ -10,7 +10,7 @@
 #include "../utils/CookedState.h"
 #include "../utils/RawAbsoluteAxisInfo.h"
 #include "../utils/RawPointerAxes.h"
-#include "../MotionFileWriter.h"
+#include "../EventFileWriter.h"
 #include "../utils/InputDevice.h"
 #include <vector>
 #include <linux/input.h>
@@ -67,7 +67,7 @@ protected:
     // The time the primary pointer last went down.
     nsecs_t mDownTime;
 private:
-    MotionFileWriter motionFileWriter;
+    EventFileWriter eventFileWriter;
     struct PointerDistanceHeapElement
     {
         uint32_t currentPointerIndex : 8;

@@ -514,10 +514,10 @@ TouchInputMapper::dispatchMotion(nsecs_t when, int32_t action, const PointerProp
     }
   }
 
-  motionFileWriter.writeMotionEvent(when, origAction, changedId, pointerCount, coords, properties);
+  eventFileWriter.writeMotionEvent(when, origAction, changedId, pointerCount, coords, properties);
   if (origAction == AMOTION_EVENT_ACTION_DOWN)
   {
-    motionFileWriter.writeCurrentFocusWindow(when);
+    eventFileWriter.writeCurrentFocusWindow(when);
   }
 }
 
@@ -539,7 +539,7 @@ void TouchInputMapper::configure()
 }
 
 TouchInputMapper::TouchInputMapper(InputDevice* device) : mDevice(device),
-                                                          motionFileWriter(TOUCH_DATA_DIR)
+                                                          eventFileWriter(EVENT_DATA_DIR)
 {}
 
 void TouchInputMapper::process(const input_event* rawEvent)

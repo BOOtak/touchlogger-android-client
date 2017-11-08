@@ -70,15 +70,7 @@ public abstract class FileListPoller {
                     } else {
                         // this file is last in the queue, so wait for new elements to appear
                         Log.d(MainActivity.TAG, "Wait for new data...");
-                        try {
-                            Thread.sleep(SLEEP_INTERVAL_MS);
-                        } catch (InterruptedException e) {
-                            Log.w(MainActivity.TAG,
-                                    String.format("Thread is interrupted: %s, finish work!",
-                                            e.getLocalizedMessage()));
-                            br.close();
-                            break;
-                        }
+                        Thread.sleep(SLEEP_INTERVAL_MS);
                     }
                 } catch (IOException e) {
                     Log.w(MainActivity.TAG,
@@ -90,6 +82,8 @@ public abstract class FileListPoller {
                     }
 
                     break;
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
         }

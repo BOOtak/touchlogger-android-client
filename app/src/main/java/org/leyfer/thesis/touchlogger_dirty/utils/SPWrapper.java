@@ -8,6 +8,7 @@ public class SPWrapper {
     private static final String LAST_GESTURE_TIMESTAMP = "last_gesture_timestamp";
     private static final String LAST_GESTURE_X = "last_gesture_x";
     private static final String LAST_GESTURE_Y = "last_gesture_y";
+    private static final String LAST_HEARTBEAT_TS = "last_heartbeat_ts";
     private final Context context;
 
     public SPWrapper(Context context) {
@@ -24,5 +25,13 @@ public class SPWrapper {
 
     public boolean setLastGestureTimestamp(Long lastGestureTimestamp) {
         return getSP().edit().putLong(LAST_GESTURE_TIMESTAMP, lastGestureTimestamp).commit();
+    }
+
+    public Long getLastHeartBeatTimestamp() {
+        return getSP().getLong(LAST_HEARTBEAT_TS, 0);
+    }
+
+    public boolean setLastHeartbeatTimestamp(Long lastHeartbeatTimestamp) {
+        return getSP().edit().putLong(LAST_HEARTBEAT_TS, lastHeartbeatTimestamp).commit();
     }
 }

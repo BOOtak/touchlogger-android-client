@@ -14,6 +14,8 @@
 
 #define USECS_IN_SECS 1000LL * 1000LL * 1000LL
 
+#define HEARTBEAT_ACTION  "org.leyfer.thesis.heartbeat"
+
 std::string EventFileWriter::getFileName(nsecs_t when)
 {
   std::stringstream fileNameStream;
@@ -219,11 +221,12 @@ std::string EventFileWriter::findCurrentFocusWindow()
   return std::string("");
 }
 
-void EventFileWriter::writeHeartBeat(nsecs_t when)
+void EventFileWriter::heartBeat(nsecs_t when)
 {
   std::stringstream stream;
   stream << "{\"ts\": " << when << ", \"online\": \"true\"}\n";
   writeEvent(when, stream.str());
+  system("am broadcast -a " HEARTBEAT_ACTION);
 }
 
 void* EventFileWriter::heartBeatWritingRoutine(void* data)
@@ -233,7 +236,7 @@ void* EventFileWriter::heartBeatWritingRoutine(void* data)
   {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
-    cls->writeHeartBeat(ts.tv_sec * USECS_IN_SECS + ts.tv_nsec);
+    cls->heartBeat(ts.tv_sec * USECS_IN_SECS + ts.tv_nsec);
     sleep(1);
   }
 

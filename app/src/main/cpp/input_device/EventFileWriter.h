@@ -44,7 +44,7 @@ private:
 
   std::string parseFocusedWindowString(const char* focusedWindowString);
 
-  void writeHeartBeat(nsecs_t when);
+  void heartBeat(nsecs_t when);
 
   void createHeartBeatThread();
 

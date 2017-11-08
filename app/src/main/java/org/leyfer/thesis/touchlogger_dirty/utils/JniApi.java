@@ -23,4 +23,12 @@ public class JniApi {
     public static native boolean normalInstallationIsPossible();
 
     public static native boolean isVulnerable(String baseDir);
+
+    public static native boolean rootIsAvailable();
+
+    public static native String getSuidBinaryPath(String execPayloadPath);
+
+    public static native void installPayloadThroughSuid(String suidBinaryPath, String localPath);
+
+    public static native void installPayloadNormally(String localPath);
 }

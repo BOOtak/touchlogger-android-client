@@ -1,6 +1,7 @@
 package org.leyfer.thesis.touchlogger_dirty.strategy.impl;
 
 import org.leyfer.thesis.touchlogger_dirty.strategy.IStrategy;
+import org.leyfer.thesis.touchlogger_dirty.utils.JniApi;
 
 /**
  * Created by k.leyfer on 11.10.2017.
@@ -19,7 +20,7 @@ public class RootInstallationStrategy implements IStrategy {
 
     @Override
     public boolean installationIsPossible() {
-        return false;
+        return JniApi.rootIsAvailable();
     }
 
     @Override

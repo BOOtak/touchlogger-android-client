@@ -1,11 +1,9 @@
-package org.leyfer.thesis.touchlogger_dirty.strategy.impl.dirty;
+package org.leyfer.thesis.touchlogger_dirty.strategy.wrapper.impl;
 
 import android.content.Context;
-import android.os.Handler;
 
-import org.leyfer.thesis.touchlogger_dirty.handler.InjectProgressHandler;
-import org.leyfer.thesis.touchlogger_dirty.strategy.CompositeWrapper;
-import org.leyfer.thesis.touchlogger_dirty.strategy.StrategyWrapper;
+import org.leyfer.thesis.touchlogger_dirty.strategy.wrapper.CompositeWrapper;
+import org.leyfer.thesis.touchlogger_dirty.strategy.wrapper.StrategyWrapper;
 import org.leyfer.thesis.touchlogger_dirty.utils.JniApi;
 
 import java.util.List;
@@ -17,12 +15,10 @@ import java.util.List;
 public class DirtyStrategyWrapper extends CompositeWrapper {
 
     private final Context context;
-    private final Handler handler;
 
     public DirtyStrategyWrapper(List<StrategyWrapper> childStrategies, Context context) {
         super(childStrategies);
         this.context = context;
-        handler = new InjectProgressHandler(context);
     }
 
     @Override

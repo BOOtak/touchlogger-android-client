@@ -1,12 +1,12 @@
-package org.leyfer.thesis.touchlogger_dirty.strategy.impl.dirty;
+package org.leyfer.thesis.touchlogger_dirty.strategy.impl;
 
 import org.leyfer.thesis.touchlogger_dirty.strategy.IStrategy;
 
 /**
- * Created by k.leyfer on 11.10.2017.
+ * Created by k.leyfer on 12.10.2017.
  */
 
-public class RunAsOverwritingStrategy implements IStrategy {
+public class ManualInstallationStrategy implements IStrategy {
     @Override
     public String getTitle() {
         return null;
@@ -19,7 +19,7 @@ public class RunAsOverwritingStrategy implements IStrategy {
 
     @Override
     public boolean installationIsPossible() {
-        return false;
+        return true;
     }
 
     @Override

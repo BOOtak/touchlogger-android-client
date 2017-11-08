@@ -1,4 +1,6 @@
-package org.leyfer.thesis.touchlogger_dirty.strategy;
+package org.leyfer.thesis.touchlogger_dirty.strategy.wrapper;
+
+import org.leyfer.thesis.touchlogger_dirty.strategy.IStrategy;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,11 +18,11 @@ public abstract class CompositeWrapper extends StrategyWrapper {
         this.childStrategies = childStrategies;
     }
 
-    public List<IStrategy> getChildStrategies() {
+    public List<IStrategy> getStrategies() {
         List<IStrategy> availableStrategies = new ArrayList<>();
         if (isAvailable()) {
             for (StrategyWrapper strategyWrapper : childStrategies) {
-                availableStrategies.addAll(strategyWrapper.getChildStrategies());
+                availableStrategies.addAll(strategyWrapper.getStrategies());
             }
         }
 

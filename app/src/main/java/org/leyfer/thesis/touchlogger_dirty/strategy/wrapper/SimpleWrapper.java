@@ -1,4 +1,6 @@
-package org.leyfer.thesis.touchlogger_dirty.strategy;
+package org.leyfer.thesis.touchlogger_dirty.strategy.wrapper;
+
+import org.leyfer.thesis.touchlogger_dirty.strategy.IStrategy;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +19,7 @@ public class SimpleWrapper extends StrategyWrapper {
         strategies.add(this.strategy);
     }
 
-    public List<IStrategy> getChildStrategies() {
+    public List<IStrategy> getStrategies() {
         if (strategy.installationIsPossible()) {
             return strategies;
         } else {

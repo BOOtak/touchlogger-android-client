@@ -22,7 +22,7 @@ int main(int argc, const char **argv)
     printf("setresuid failed: %s\n", strerror(errno));
   }
 
-  gid_t groups[] = { 2000, 1004, 1007, 1011, 1015, 1028, 3001, 3002, 3003, 3006 };
+  gid_t groups[] = { 2000, 1003, 1004, 1007, 1011, 1015, 1028, 3001, 3002, 3003, 3006 };
   if (setgroups(sizeof(groups)/sizeof(groups[0]), groups) != 0) {
     printf("Unable to set groups: %s", strerror(errno));
   }

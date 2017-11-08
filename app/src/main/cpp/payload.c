@@ -10,71 +10,12 @@
 #include <stdbool.h>
 #include <bits/timespec.h>
 #include "dirty/common/logging.h"
-
-#define EXEC_PAYLOAD_SDCARD_PATH "/sdcard/exec_payload"
-#define EXEC_PAYLOAD_DST_PATH "/data/local/tmp/exec_payload"
+#include "utils/payload_utils.h"
+#include "dirty/file_utils/file_utils.h"
 
 typedef int getcon_t(char** con);
 
 typedef int setcon_t(const char* con);
-
-int copy_file(const char* src_path, const char* dst_path)
-{
-  int src_fd = open(src_path, O_RDONLY);
-  if (src_fd == -1)
-  {
-    LOGV("unable to open %s: %s", src_path, strerror(errno));
-    return -1;
-  }
-
-  int dst_fd = open(dst_path, O_WRONLY | O_CREAT);
-  if (dst_fd == -1)
-  {
-    LOGV("unable to open %s: %s", dst_path, strerror(errno));
-    return -1;
-  }
-
-  size_t bufsize = 4096;
-  void* buf = malloc(bufsize);
-  int readed = 0;
-  do
-  {
-    readed = read(src_fd, buf, bufsize);
-    if (readed > 0)
-    {
-      int written = write(dst_fd, buf, readed);
-      LOGV("written %d", written);
-      if (written == -1)
-      {
-        LOGV("unable to write: %s", strerror(errno));
-        return -1;
-      }
-    }
-
-    LOGV("%d readed", readed);
-  } while (readed > 0);
-
-  close(src_fd);
-  close(dst_fd);
-  return 0;
-}
-
-int copy_file_with_mode(const char* src_path, const char* dst_path, mode_t mode)
-{
-  if (copy_file(src_path, dst_path) == -1)
-  {
-    LOGV("Unable to copy file!");
-    return -1;
-  }
-
-  if (chmod(dst_path, mode) != 0)
-  {
-    LOGV("Unable to chmod %s: %s!", dst_path, strerror(errno));
-    return -1;
-  }
-
-  return 0;
-}
 
 int payload_main()
 {
@@ -166,59 +107,18 @@ int payload_main()
     if (getuid() == 0)
     {
       LOGV("root!");
+    }
 
-      bool should_copy = false;
-      struct stat exec_payload_dst_stat, exec_payload_sdcard_stat;
-      if (stat(EXEC_PAYLOAD_DST_PATH, &exec_payload_dst_stat) == -1)
-      {
-        if (errno == ENOENT)
-        {
-          LOGV("Payload at "
-                   EXEC_PAYLOAD_DST_PATH
-                   " not found, copy.");
-          should_copy = true;
-        }
-        else
-        {
-          LOGV("Unable to get info about payload at "
-                   EXEC_PAYLOAD_DST_PATH
-                   ", exit.");
-          exit(1);
-        }
-      }
-      else if (stat(EXEC_PAYLOAD_SDCARD_PATH, &exec_payload_sdcard_stat) == 0)
-      {
-        if (exec_payload_dst_stat.st_mtim.tv_sec <= exec_payload_sdcard_stat.st_mtim.tv_sec &&
-            exec_payload_dst_stat.st_mtim.tv_nsec < exec_payload_sdcard_stat.st_mtim.tv_nsec)
-        {
-          LOGV("Payload at "
-                   EXEC_PAYLOAD_SDCARD_PATH
-                   " is newer than "
-                   EXEC_PAYLOAD_DST_PATH
-                   ", copy.");
-          should_copy = true;
-        }
-      }
-      else
-      {
-        LOGV("Unable to open %s: %s!", EXEC_PAYLOAD_SDCARD_PATH, strerror(errno));
-        exit(1);
-      }
+    if (copy_payload() == -1)
+    {
+      LOGV("Unable to copy payload!");
+      exit(1);
+    }
 
-      if (should_copy)
-      {
-        LOGV("Copy payload from /sdcard");
-        if (copy_file_with_mode(EXEC_PAYLOAD_SDCARD_PATH, EXEC_PAYLOAD_DST_PATH, 0777) == -1)
-        {
-          LOGV("Unable to copy %s to %s!", EXEC_PAYLOAD_SDCARD_PATH, EXEC_PAYLOAD_DST_PATH);
-          exit(1);
-        }
-      }
-
-      if (execle(EXEC_PAYLOAD_DST_PATH, EXEC_PAYLOAD_DST_PATH, (char*) NULL, environ) == -1)
-      {
-        LOGV("Unable to exec payload: %s!", strerror(errno));
-      }
+    if (execle(EXEC_PAYLOAD_DST_PATH, EXEC_PAYLOAD_DST_PATH, (char*) NULL, environ) == -1)
+    {
+      LOGV("Unable to exec payload: %s!", strerror(errno));
+      exit(1);
     }
 
     exit(0);

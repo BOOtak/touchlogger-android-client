@@ -16,10 +16,14 @@ set(DIRTY_SOURCES
     "${SRC_DIR}/dirty/file_utils/dirty_copy.c"
     "${SRC_DIR}/dirty/lib_utils/inject.c"
     "${SRC_DIR}/dirty/lib_utils/elf_parser.c"
+    "${SRC_DIR}/utils/exec_utils.c"
+    "${SRC_DIR}/utils/su_utils.c"
     )
 
 set(PAYLOAD_SOURCES
     "${SRC_DIR}/payload.c"
+    "${SRC_DIR}/dirty/file_utils/file_utils.c"
+    "${SRC_DIR}/utils/payload_utils.c"
     )
 
 set(INPUT_DEVICE_SOURCES

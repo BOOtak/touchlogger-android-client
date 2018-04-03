@@ -174,11 +174,12 @@ int InputReader::findTouchscreen()
         {
           LOGV("Type: %d", inputDevice.type);
           LOGV("Parameters:");
+          LOGV("%6s %5s %5s %5s %5s %5s", "type", "min", "max", "flat", "fuzz", "res");
           for (std::vector<RawAbsoluteAxisInfo>::iterator it = inputDevice.axisInfo.begin(),
                    end = inputDevice.axisInfo.end(); it != end; it++)
           {
             RawAbsoluteAxisInfo info = *it;
-            LOGV("0x%04x: %5d %5d %5d %5d %5d", info.tested_bit, info.minValue, info.maxValue,
+            LOGV("0x%04x %5d %5d %5d %5d %5d", info.tested_bit, info.minValue, info.maxValue,
                  info.flat, info.fuzz, info.resolution);
           }
 

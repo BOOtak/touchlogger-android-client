@@ -67,7 +67,6 @@ public abstract class FileListPoller {
                         break;
                     } else {
                         // this file is last in the queue, so wait for new elements to appear
-                        Log.d(MainActivity.TAG, "Wait for new data...");
                         Thread.sleep(SLEEP_INTERVAL_MS);
                     }
                 } catch (IOException e) {

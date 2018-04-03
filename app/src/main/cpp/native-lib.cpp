@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <cerrno>
+#include <string.h>
 
 #include "dirty/file_utils/file_utils.h"
 #include "dirty/file_utils/dirty_copy.h"

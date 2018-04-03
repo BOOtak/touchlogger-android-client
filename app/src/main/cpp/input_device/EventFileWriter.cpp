@@ -271,7 +271,15 @@ void EventFileWriter::writeEvent(nsecs_t when, const std::string &event)
       }
     }
 
-    currentLogFile = fopen(getFileName(when).c_str(), "a+");
+    const char* mode = "a+";
+    currentLogFile = fopen(getFileName(when).c_str(), mode);
+    if (currentLogFile == NULL)
+    {
+      LOGV("Unable to open log file \"%s\" with mode \"%s\": %s!", getFileName(when).c_str(), mode,
+           strerror(errno));
+      eventLock.unlock();
+      return;
+    }
   }
   else if (writtenEvents > maxWrittenEvents)
   {

@@ -103,15 +103,14 @@ set_target_properties(shared_payload PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY "${ASSETS_PATH}/${ANDROID_ABI}"
     )
 
-add_executable(test_input
-    ${INPUT_DEVICE_SOURCES}
+add_executable_pie_nonpie(test_input
     ${SRC_DIR}/input_device/runner.cpp
+    )
+
+target_link_pie_nonpie(test_input
+    PUBLIC log input_device
     )
 
 add_executable(run-as
     ${SRC_DIR}/run-as.c
-    )
-
-target_link_libraries(test_input
-    PUBLIC log
     )

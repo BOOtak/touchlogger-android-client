@@ -32,11 +32,6 @@ import java.io.File;
 import static org.leyfer.thesis.touchlogger_dirty.utils.file.FileUtils.unpackAsset;
 
 public class MainActivity extends AppCompatActivity {
-
-    static {
-        System.loadLibrary(Config.MAIN_LIBRARY_NAME);
-    }
-
     public static final String TAG = "TouchLoggeer-dirty";
     private static final int PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
     private static final int PERMISSION_REQUEST_SYSTEM_ALERT_WINDOW = 2;

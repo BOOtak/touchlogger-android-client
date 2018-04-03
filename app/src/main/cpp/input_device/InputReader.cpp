@@ -8,6 +8,7 @@
 #include <malloc.h>
 #include <vector>
 #include <unistd.h>
+#include <string.h>
 #include "InputReader.h"
 #include "../dirty/common/logging.h"
 

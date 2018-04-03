@@ -2,6 +2,8 @@
 // Created by k.leyfer on 11.09.2017.
 //
 
+#include <string.h>
+#include <errno.h>
 #include "InputDevice.h"
 #include "../../dirty/common/logging.h"
 

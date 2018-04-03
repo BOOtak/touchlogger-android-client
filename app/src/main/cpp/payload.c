@@ -7,8 +7,9 @@
 #include <dlfcn.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <stdbool.h>
 #include <bits/timespec.h>
+#include <string.h>
+#include <errno.h>
 #include "dirty/common/logging.h"
 #include "utils/payload_utils.h"
 #include "dirty/file_utils/file_utils.h"

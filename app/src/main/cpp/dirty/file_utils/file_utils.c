@@ -6,6 +6,8 @@
 #include <malloc.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <string.h>
+#include <errno.h>
 #include "file_utils.h"
 
 int copy_file(const char* src_path, const char* dst_path)

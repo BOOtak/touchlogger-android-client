@@ -3,6 +3,8 @@
 #include <stdlib.h>
 
 #include <dlfcn.h>
+#include <errno.h>
+#include <string.h>
 
 #define LOGV(...) { printf(__VA_ARGS__); printf("\n"); fflush(stdout); }
 

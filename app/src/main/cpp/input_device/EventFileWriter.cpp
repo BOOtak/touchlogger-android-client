@@ -13,10 +13,6 @@
 #include "EventFileWriter.h"
 #include "../dirty/common/logging.h"
 
-#define USECS_IN_SECS 1000LL * 1000LL * 1000LL
-
-#define HEARTBEAT_ACTION  "org.leyfer.thesis.heartbeat"
-
 std::string EventFileWriter::getFileName(nsecs_t when)
 {
   std::stringstream fileNameStream;
@@ -222,40 +218,6 @@ std::string EventFileWriter::findCurrentFocusWindow()
   return std::string("");
 }
 
-void EventFileWriter::heartBeat(nsecs_t when)
-{
-  std::stringstream stream;
-  stream << "{\"ts\": " << when << ", \"online\": \"true\"}\n";
-  writeEvent(when, stream.str());
-  system("am broadcast -a " HEARTBEAT_ACTION);
-}
-
-void* EventFileWriter::heartBeatWritingRoutine(void* data)
-{
-  EventFileWriter* cls = reinterpret_cast<EventFileWriter*>(data);
-  while (__sync_bool_compare_and_swap(&(cls->should_stop), 0, 0))
-  {
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    cls->heartBeat(ts.tv_sec * USECS_IN_SECS + ts.tv_nsec);
-    sleep(1);
-  }
-
-  return NULL;
-}
-
-void EventFileWriter::createHeartBeatThread()
-{
-  pthread_t heartBeatThread;
-  int res;
-  EventFileWriter* cls = this;
-  if ((res = pthread_create(&heartBeatThread, NULL, &heartBeatWritingRoutine,
-                            reinterpret_cast<void*>(cls))) != 0)
-  {
-    LOGV("Unable to create thread: %s!\n", strerror(res));
-  }
-}
-
 void EventFileWriter::writeEvent(nsecs_t when, const std::string &event)
 {
   eventLock.lock();
@@ -322,9 +284,7 @@ EventFileWriter::EventFileWriter(std::string logDir) : logDirAbsPath(logDir),
                                                        maxWrittenEvents(3600),
                                                        eventLock(),
                                                        should_stop(0)
-{
-  createHeartBeatThread();
-}
+{}
 
 EventFileWriter::~EventFileWriter()
 {

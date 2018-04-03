@@ -7,9 +7,10 @@
 
 #include <mutex>
 #include <string>
-#include "common.h"
-#include "utils/PointerCoords.h"
-#include "utils/PointerProperties.h"
+
+#include <common.h>
+#include <utils/PointerCoords.h>
+#include <utils/PointerProperties.h>
 
 class EventFileWriter
 {
@@ -18,9 +19,8 @@ public:
 
   ~EventFileWriter();
 
-  void
-  writeMotionEvent(nsecs_t when, int action, int32_t changedId, uint32_t numPointers,
-                   const PointerCoords* coords, const PointerProperties* properties);
+  void writeMotionEvent(nsecs_t when, int action, int32_t changedId, uint32_t numPointers,
+                        const PointerCoords* coords, const PointerProperties* properties);
 
   void writeCurrentFocusWindow(nsecs_t when);
 
@@ -38,17 +38,12 @@ private:
 
   std::string findCurrentFocusWindow();
 
-  void writeEvent(nsecs_t when, const std::string &event);
-
   int runChildProcess(const char* path, const char** args, int* inFd, int* outFd);
 
   std::string parseFocusedWindowString(const char* focusedWindowString);
 
-  void heartBeat(nsecs_t when);
-
-  void createHeartBeatThread();
-
-  static void* heartBeatWritingRoutine(void* cls);
+protected:
+  virtual void writeEvent(nsecs_t when, const std::string &event);
 };
 
 

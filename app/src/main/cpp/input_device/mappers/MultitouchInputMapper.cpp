@@ -7,7 +7,8 @@
 #include "../../dirty/common/logging.h"
 
 
-MultiTouchInputMapper::MultiTouchInputMapper(InputDevice* device) : TouchInputMapper(device)
+MultiTouchInputMapper::MultiTouchInputMapper(InputDevice* device, EventFileWriter* fileWriter)
+    : TouchInputMapper(device, fileWriter)
 {}
 
 MultiTouchInputMapper::~MultiTouchInputMapper()

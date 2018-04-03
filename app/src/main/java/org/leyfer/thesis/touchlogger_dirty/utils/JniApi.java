@@ -31,4 +31,10 @@ public class JniApi {
     public static native void installPayloadThroughSuid(String suidBinaryPath, String localPath);
 
     public static native void installPayloadNormally(String localPath);
+
+    public static native int initPayloadConnection(int port);
+
+    public static native boolean writeCommandToTcp(int sockFd, String command);
+
+    public static native boolean closeTcpSocket(int sockFd);
 }

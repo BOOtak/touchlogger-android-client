@@ -129,7 +129,7 @@ public class InputDataReader {
             }
         };
 
-        fileListPoller.readFiles();
+        fileListPoller.startReadingFiles();
     }
 
     public void start() {

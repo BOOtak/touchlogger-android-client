@@ -6,29 +6,30 @@
 #define TOUCHLOGGER_DIRTY_INPUTREADER_H
 
 
-#include "utils/InputDevice.h"
-#include "mappers/MultitouchInputMapper.h"
+#include <utils/InputDevice.h>
+#include <mappers/MultitouchInputMapper.h>
 
 class InputReader
 {
 public:
-    InputReader();
+  InputReader(EventFileWriter* fileWriter);
 
-    ~InputReader();
+  ~InputReader();
 
-    void start();
+  void start();
 
 private:
-    InputDevice inputDevice;
+  EventFileWriter* fileWriter;
+  InputDevice inputDevice;
 
-    MultiTouchInputMapper* multiTouchInputMapper;
+  MultiTouchInputMapper* multiTouchInputMapper;
 
-    int findTouchscreen();
+  int findTouchscreen();
 
-    //TODO: move to InputDevice
-    bool configureTouchscreenDevice(const char* input_device_path);
+  //TODO: move to InputDevice
+  bool configureTouchscreenDevice(const char* input_device_path);
 
-    bool containsNonzeroBytes(const uint8_t* array, uint32_t start_index, uint32_t end_index);
+  bool containsNonzeroBytes(const uint8_t* array, uint32_t start_index, uint32_t end_index);
 };
 
 

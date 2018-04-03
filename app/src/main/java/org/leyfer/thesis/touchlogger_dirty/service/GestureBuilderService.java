@@ -10,6 +10,17 @@ import org.leyfer.thesis.touchlogger_dirty.InputDataReader;
 import org.leyfer.thesis.touchlogger_dirty.activity.MainActivity;
 import org.leyfer.thesis.touchlogger_dirty.event.NewMatchingFileEvent;
 import org.leyfer.thesis.touchlogger_dirty.utils.Config;
+import org.leyfer.thesis.touchlogger_dirty.utils.writer.ControlWriter;
+import org.leyfer.thesis.touchlogger_dirty.utils.HeartBeatSender;
+import org.leyfer.thesis.touchlogger_dirty.utils.writer.TCPSocketControlWriter;
+
+import java.io.File;
+import java.io.IOException;
+
+import static org.leyfer.thesis.touchlogger_dirty.utils.Config.CONTROL_FILENAME;
+import static org.leyfer.thesis.touchlogger_dirty.utils.Config.HEARTBEAT_COMMAND;
+import static org.leyfer.thesis.touchlogger_dirty.utils.Config.INPUT_DATA_DIR;
+import static org.leyfer.thesis.touchlogger_dirty.utils.JniApi.initPayloadConnection;
 
 
 public class GestureBuilderService extends IntentService {
@@ -40,8 +51,15 @@ public class GestureBuilderService extends IntentService {
 
     private void handleActionConstructGestures() {
         inputDataReader = new InputDataReader(
-                Config.TOUCH_DATA_FILE_BASE_NAME, Config.INPUT_DATA_DIR, getApplicationContext()
+                Config.TOUCH_DATA_FILE_BASE_NAME, INPUT_DATA_DIR, getApplicationContext()
         );
+
+        ControlWriter controlWriter;
+
+        controlWriter = new TCPSocketControlWriter(Config.PAYLOAD_PORT);
+        controlWriter.start();
+        new HeartBeatSender(
+                Config.HEARTBEAT_INTERVAL_MS, HEARTBEAT_COMMAND, controlWriter).start();
 
         EventBus.getDefault().register(inputDataReader);
         Log.d(MainActivity.TAG, String.format("Registered! Overall: %b",

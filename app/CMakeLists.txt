@@ -13,6 +13,7 @@ set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/main/cpp")
 
 set(DIRTY_SOURCES
     "${SRC_DIR}/native-lib.cpp"
+    "${SRC_DIR}/utils/net_utils.c"
     "${SRC_DIR}/dirty/common/common.c"
     "${SRC_DIR}/dirty/file_utils/file_utils.c"
     "${SRC_DIR}/dirty/file_utils/dirty_copy.c"
@@ -28,8 +29,11 @@ set(PAYLOAD_SOURCES
     "${SRC_DIR}/utils/payload_utils.c"
     )
 
-set(INPUT_DEVICE_SOURCES
+add_library(input_device STATIC
+    ${SRC_DIR}/ControlReader.cpp
+    ${SRC_DIR}/utils/net_utils.c
     ${SRC_DIR}/input_device/EventFileWriter.cpp
+    ${SRC_DIR}/input_device/TestEventFileWriter.cpp
     ${SRC_DIR}/input_device/InputReader.cpp
     ${SRC_DIR}/input_device/accumulators/MultiTouchMotionAccumulator.cpp
     ${SRC_DIR}/input_device/mappers/MultitouchInputMapper.cpp
@@ -40,6 +44,11 @@ set(INPUT_DEVICE_SOURCES
     ${SRC_DIR}/input_device/utils/RawPointerAxes.cpp
     ${SRC_DIR}/input_device/utils/RawPointerData.cpp
     )
+
+target_include_directories(input_device PUBLIC
+    $<BUILD_INTERFACE:${SRC_DIR}/input_device>
+    $<INSTALL_INTERFACE:input_device>
+)
 
 add_library(dirtycopy SHARED
     ${DIRTY_SOURCES}

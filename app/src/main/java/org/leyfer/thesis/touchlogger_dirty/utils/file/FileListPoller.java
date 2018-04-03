@@ -26,12 +26,10 @@ public abstract class FileListPoller {
     private final Queue<File> fileQueue = new ConcurrentLinkedQueue<>();
 
     public FileListPoller(@NonNull List<File> fileList) {
-        for (File file : fileList) {
-            fileQueue.add(file);
-        }
+        fileQueue.addAll(fileList);
     }
 
-    public void readFiles() {
+    public void startReadingFiles() {
         while (true) {
             File currentFile = fileQueue.peek();
 

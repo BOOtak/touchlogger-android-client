@@ -12,7 +12,8 @@
 #include "InputReader.h"
 #include "../dirty/common/logging.h"
 
-InputReader::InputReader() : inputDevice(), multiTouchInputMapper(NULL)
+InputReader::InputReader(EventFileWriter* fileWriter)
+    : inputDevice(), multiTouchInputMapper(NULL), fileWriter(fileWriter)
 {}
 
 bool
@@ -200,7 +201,7 @@ void InputReader::start()
     return;
   }
 
-  multiTouchInputMapper = new MultiTouchInputMapper(&inputDevice);
+  multiTouchInputMapper = new MultiTouchInputMapper(&inputDevice, fileWriter);
   multiTouchInputMapper->configure();
 
   //FIXME: add timestamp
@@ -210,7 +211,8 @@ void InputReader::start()
   input_event read_buffer[buffer_size];
   while (1)
   {
-    ssize_t read_size = read(inputDevice.fd, (void*) read_buffer, sizeof(input_event) * buffer_size);
+    ssize_t read_size = read(inputDevice.fd, (void*) read_buffer,
+                             sizeof(input_event) * buffer_size);
     if (read_size < 0)
     {
       LOGV("Unable to read: %s!", strerror(errno));

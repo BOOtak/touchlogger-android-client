@@ -230,8 +230,10 @@ int main(int argc, const char** argv)
   }
 
   LOGV("Collecting input data & sending it to Android service...");
-  InputReader* inputReader = new InputReader();
+  EventFileWriter* eventFileWriter = new EventFileWriter(EVENT_DATA_DIR);
+  InputReader* inputReader = new InputReader(eventFileWriter);
   inputReader->start();
+
   LOGV("Finish inputReader...");
   delete(inputReader);
   return 0;

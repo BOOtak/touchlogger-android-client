@@ -9,7 +9,7 @@ include("functions.cmake")
 set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDEBUG=1 -DDEBUG_POINTER_ASSIGNMENT=0 -fvisibility=hidden -s -Os -fno-stack-protector -fmerge-all-constants -fno-unwind-tables -fno-asynchronous-unwind-tables" )
 set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG=1 -DDEBUG_POINTER_ASSIGNMENT=0 -fvisibility=hidden -s -Os" )
 
-set(SRC_DIR src/main/cpp)
+set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/main/cpp")
 
 set(DIRTY_SOURCES
     "${SRC_DIR}/native-lib.cpp"

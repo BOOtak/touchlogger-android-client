@@ -30,10 +30,6 @@
             android:process="touchlogger.here">
         </service>
         <service
-            android:name=".service.FloatingIndicationService"
-            android:exported="false">
-        </service>
-        <service
             android:name=".service.GestureBuilderService"
             android:exported="false">
         </service>

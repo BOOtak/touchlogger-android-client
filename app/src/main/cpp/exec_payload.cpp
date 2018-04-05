@@ -162,7 +162,7 @@ int checkConditions()
   return 0;
 }
 
-int waitForService()
+int startServceAndWaitForItToBecomeOnline()
 {
   while (1)
   {
@@ -223,7 +223,7 @@ int main(int argc, const char** argv)
     return -1;
   }
 
-  if (waitForService() == -1)
+  if (startServceAndWaitForItToBecomeOnline() == -1)
   {
     LOGV("Unable to wait for Android service, exiting...");
     return -1;

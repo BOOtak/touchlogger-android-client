@@ -30,19 +30,19 @@ set(PAYLOAD_SOURCES
     )
 
 add_library(input_device STATIC
-    ${SRC_DIR}/ControlReader.cpp
-    ${SRC_DIR}/utils/net_utils.c
-    ${SRC_DIR}/input_device/EventFileWriter.cpp
-    ${SRC_DIR}/input_device/TestEventFileWriter.cpp
-    ${SRC_DIR}/input_device/InputReader.cpp
-    ${SRC_DIR}/input_device/accumulators/MultiTouchMotionAccumulator.cpp
-    ${SRC_DIR}/input_device/mappers/MultitouchInputMapper.cpp
-    ${SRC_DIR}/input_device/mappers/TouchInputMapper.cpp
-    ${SRC_DIR}/input_device/utils/CookedPointData.cpp
-    ${SRC_DIR}/input_device/utils/InputDevice.cpp
-    ${SRC_DIR}/input_device/utils/PointerCoords.cpp
-    ${SRC_DIR}/input_device/utils/RawPointerAxes.cpp
-    ${SRC_DIR}/input_device/utils/RawPointerData.cpp
+    "${SRC_DIR}/ControlReader.cpp"
+    "${SRC_DIR}/utils/net_utils.c"
+    "${SRC_DIR}/input_device/EventFileWriter.cpp"
+    "${SRC_DIR}/input_device/TestEventFileWriter.cpp"
+    "${SRC_DIR}/input_device/InputReader.cpp"
+    "${SRC_DIR}/input_device/accumulators/MultiTouchMotionAccumulator.cpp"
+    "${SRC_DIR}/input_device/mappers/MultitouchInputMapper.cpp"
+    "${SRC_DIR}/input_device/mappers/TouchInputMapper.cpp"
+    "${SRC_DIR}/input_device/utils/CookedPointData.cpp"
+    "${SRC_DIR}/input_device/utils/InputDevice.cpp"
+    "${SRC_DIR}/input_device/utils/PointerCoords.cpp"
+    "${SRC_DIR}/input_device/utils/RawPointerAxes.cpp"
+    "${SRC_DIR}/input_device/utils/RawPointerData.cpp"
     )
 
 target_include_directories(input_device PUBLIC

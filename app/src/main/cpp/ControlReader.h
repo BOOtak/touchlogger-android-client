@@ -10,7 +10,7 @@
 #include <mutex>
 #include "utils/net_utils.h"
 
-typedef void (* control_callback)();
+typedef int (* control_callback)();
 
 class ControlReader
 {

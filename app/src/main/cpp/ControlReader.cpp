@@ -96,7 +96,8 @@ int ControlReader::connectionRoutine(int clientFd)
   ssize_t status;
   int readed = 0;
 
-  const char* RESPONSE_OK = "OK\n";
+  const char* responseOk = "OK\n";
+  const char* responseError = "Error!\n";
 
   while (__sync_bool_compare_and_swap(&shouldStop, 0, 0))
   {
@@ -108,12 +109,20 @@ int ControlReader::connectionRoutine(int clientFd)
         commandBuffer[readed] = '\0';
         LOGV("got command \"%s\"!", commandBuffer);
         std::string command = std::string(commandBuffer);
-        for (auto& I: commands)
+        for (auto &I: commands)
         {
           if (command == I.first)
           {
-            I.second();
-            write(clientFd, RESPONSE_OK, strlen(RESPONSE_OK));
+            int callbackRes = I.second();
+            if (callbackRes == 0)
+            {
+              write(clientFd, responseOk, strlen(responseOk));
+            }
+            else
+            {
+              write(clientFd, responseError, strlen(responseError));
+            }
+
             break;
           }
         }

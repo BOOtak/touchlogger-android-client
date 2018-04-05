@@ -20,7 +20,7 @@ typedef int getcon_t(char** con);
 // TODO: figure out how to get this info from CMake script and pass it here
 #define PKNAME                  "org.leyfer.thesis.touchlogger_dirty"
 #define ACTIVITY                ".activity.MainActivity"
-#define BOOLEAN_EXTRA_KEY       "org.leyfer.thesis.extra.started_by_payload true"
+#define BOOLEAN_EXTRA_KEY       "org.leyfer.thesis.extra.started_by_payload"
 #define SERVICE_PROCESS_NAME    "touchlogger.here"
 #define SERVICE                 ".service.PayloadWaitingService"
 #define ACTION                  "org.leyfer.thesis.touchlogger_dirty.service.action.WAIT_FOR_PAYLOAD"

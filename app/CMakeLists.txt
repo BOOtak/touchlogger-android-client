@@ -43,6 +43,7 @@ add_library(input_device STATIC
     "${SRC_DIR}/input_device/utils/PointerCoords.cpp"
     "${SRC_DIR}/input_device/utils/RawPointerAxes.cpp"
     "${SRC_DIR}/input_device/utils/RawPointerData.cpp"
+    "${SRC_DIR}/input_device/utils/Utils.cpp"
     )
 
 target_include_directories(input_device PUBLIC

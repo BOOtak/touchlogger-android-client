@@ -12,7 +12,7 @@
 class InputReader
 {
 public:
-  InputReader(EventFileWriter* fileWriter);
+  InputReader(EventFileWriter* fileWriter, InputDevice* inputDevice);
 
   ~InputReader();
 
@@ -20,16 +20,9 @@ public:
 
 private:
   EventFileWriter* fileWriter;
-  InputDevice inputDevice;
+  InputDevice* inputDevice;
 
   MultiTouchInputMapper* multiTouchInputMapper;
-
-  int findTouchscreen();
-
-  //TODO: move to InputDevice
-  bool configureTouchscreenDevice(const char* input_device_path);
-
-  bool containsNonzeroBytes(const uint8_t* array, uint32_t start_index, uint32_t end_index);
 };
 
 

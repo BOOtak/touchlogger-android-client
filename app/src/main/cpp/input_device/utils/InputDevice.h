@@ -28,46 +28,69 @@ static const char* input_device_dir_path = "/dev/input";
 
 enum
 {
-    DEVICE_TYPE_SINGLE_TOUCH = 0x00000001,
+  DEVICE_TYPE_SINGLE_TOUCH = 0x00000001,
 
-    DEVICE_TYPE_MULTI_TOUCH = 0x00000002
+  DEVICE_TYPE_MULTI_TOUCH = 0x00000002
 };
 
 enum
 {
-    KEY_STATE_DOWN = 0x00000001,
-    KEY_STATE_UP = 0x00000002,
-    KEY_STATE_UNKNOWN = 0xFFFFFFFF
+  KEY_STATE_DOWN = 0x00000001,
+  KEY_STATE_UP = 0x00000002,
+  KEY_STATE_UNKNOWN = 0xFFFFFFFF
 };
 
-//TODO: make class instead of struct
-struct InputDevice
+class InputDevice
 {
-    int fd;
-    int type;
+public:
+  InputDevice(const char* inputDevicePath);
 
-    uint8_t absBitmask[ABS_MAX];
-    uint8_t keyBitmask[KEY_MAX];
+private:
+  const char* inputDevicePath;
+  int fd;
+  int type;
 
-    std::vector<RawAbsoluteAxisInfo> axisInfo;
+  uint8_t absBitmask[ABS_MAX];
+  uint8_t keyBitmask[KEY_MAX];
 
-    bool hasKey(int scanCode)
+  std::vector<RawAbsoluteAxisInfo> axisInfos;
+
+  bool hasKey(int scanCode)
+  {
+    if (scanCode >= 0 && scanCode <= KEY_MAX)
     {
-      if (scanCode >= 0 && scanCode <= KEY_MAX)
-      {
-        return test_bit(scanCode, keyBitmask) != 0;
-      }
-
-      return false;
+      return test_bit(scanCode, keyBitmask) != 0;
     }
 
-    bool getKeyState(int scanCode);
+    return false;
+  }
 
-    bool isKeyPressed(int scanCode);
+  bool containsNonzeroBytes(const uint8_t* array, uint32_t start_index, uint32_t end_index);
 
-    status_t getAbsoluteAxisValue(int32_t axis, int32_t* outValue) const;
+public:
 
-    int32_t getAbsoluteAxisValue(int32_t axis);
+  inline int getType()
+  {
+    return type;
+  }
+
+  inline std::vector getAxisInfos() {
+    return axisInfos;
+  }
+  ssize_t read(input_event* readBuffer, size_t inputEventCount);
+
+  int close();
+
+  bool getKeyState(int scanCode);
+
+  bool isKeyPressed(int scanCode);
+
+  status_t getAbsoluteAxisValue(int32_t axis, int32_t* outValue) const;
+
+  int32_t getAbsoluteAxisValue(int32_t axis);
+
+  bool configureAsTouchscreenDevice();
+
 };
 
 #endif //TOUCHLOGGER_DIRTY_INPUTDEVICE_H

@@ -12,6 +12,7 @@
 #include <sys/wait.h>
 #include <stdbool.h>
 #include <sys/stat.h>
+#include <utils/Utils.h>
 #include "dirty/common/logging.h"
 #include "input_device/InputReader.h"
 
@@ -229,12 +230,19 @@ int main(int argc, const char** argv)
     return -1;
   }
 
+  InputDevice* inputDevice = findTouchscreen();
+  if (inputDevice == nullptr)
+  {
+    LOGV("Unable to find input touchscreen!");
+    return -1;
+  }
+
   LOGV("Collecting input data & sending it to Android service...");
   EventFileWriter* eventFileWriter = new EventFileWriter(EVENT_DATA_DIR);
-  InputReader* inputReader = new InputReader(eventFileWriter);
+  InputReader* inputReader = new InputReader(eventFileWriter, inputDevice);
   inputReader->start();
 
   LOGV("Finish inputReader...");
-  delete(inputReader);
+  delete (inputReader);
   return 0;
 }

@@ -74,9 +74,20 @@ public:
     return type;
   }
 
-  inline std::vector getAxisInfos() {
+  inline std::vector<RawAbsoluteAxisInfo> getAxisInfos()
+  {
     return axisInfos;
   }
+
+  /**
+   * Get input device's absolute axis info.
+   * @param axis Axis we want to get info.
+   * @param info Pre-allocated pointer to input_absinfo structure for storing axis info.
+   * @return 0 on success, -1 if given axis is not supported by this input device, -errno in case of
+   * error in ioctl() call.
+   */
+  int getAbsoluteAxisInfo(int32_t axis, input_absinfo* info);
+
   ssize_t read(input_event* readBuffer, size_t inputEventCount);
 
   int close();

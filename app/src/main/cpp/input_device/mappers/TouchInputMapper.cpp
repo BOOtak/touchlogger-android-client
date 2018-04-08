@@ -561,16 +561,10 @@ status_t TouchInputMapper::getAbsoluteAxisInfo(int32_t axis, RawAbsoluteAxisInfo
 
   if (axis >= 0 && axis <= ABS_MAX)
   {
-    if (test_bit(axis, mDevice->absBitmask))
+    struct input_absinfo info;
+    int res = mDevice->getAbsoluteAxisInfo(axis, &info);
+    if (res == 0)
     {
-      struct input_absinfo info;
-      if (ioctl(mDevice->fd, EVIOCGABS(axis), &info))
-      {
-        LOGV("Error reading absolute controller %d for device fd %d, errno=%d",
-             axis, mDevice->fd, errno);
-        return -errno;
-      }
-
       if (info.minimum != info.maximum)
       {
         axisInfo->valid = true;
@@ -582,6 +576,10 @@ status_t TouchInputMapper::getAbsoluteAxisInfo(int32_t axis, RawAbsoluteAxisInfo
       }
 
       return OK;
+    }
+    else if (res != -1)
+    {
+      return -res;
     }
   }
 

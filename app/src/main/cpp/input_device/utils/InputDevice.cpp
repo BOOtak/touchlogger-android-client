@@ -180,3 +180,19 @@ int InputDevice::close()
 {
   return ::close(fd);
 }
+
+int InputDevice::getAbsoluteAxisInfo(int32_t axis, input_absinfo* info)
+{
+  if (test_bit(axis, absBitmask))
+  {
+    if (ioctl(fd, EVIOCGABS(axis), info))
+    {
+      LOGV("Error reading absolute controller %d for device fd %d: %s!", axis, fd, strerror(errno));
+      return errno;
+    }
+
+    return 0;
+  }
+
+  return -1;
+}

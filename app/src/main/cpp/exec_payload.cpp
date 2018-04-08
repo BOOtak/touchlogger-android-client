@@ -277,6 +277,14 @@ int main(int argc, const char** argv)
     return -1;
   }
 
+  LOGV("Starting control server thread...");
+  std::map<std::string, control_callback> callbackMap;
+  callbackMap.emplace(pauseCommand, &onPause);
+  callbackMap.emplace(resumeCommand, &onResume);
+  callbackMap.emplace(heartbeatCommand, &onHeartBeat);
+  ControlReader* controlReader = new ControlReader(CONTROL_PORT, callbackMap);
+  controlReader->start();
+
   if (startServceAndWaitForItToBecomeOnline() == -1)
   {
     LOGV("Unable to wait for Android service, exiting...");
@@ -292,14 +300,6 @@ int main(int argc, const char** argv)
 
   LOGV("Starting reanimator...");
   reanimator = new Reanimator(HEARTBEAT_INTERVAL_MS, startServceAndWaitForItToBecomeOnline);
-
-  LOGV("Starting control server thread...");
-  std::map<std::string, control_callback> callbackMap;
-  callbackMap.emplace(pauseCommand, &onPause);
-  callbackMap.emplace(resumeCommand, &onResume);
-  callbackMap.emplace(heartbeatCommand, &onHeartBeat);
-  ControlReader* controlReader = new ControlReader(CONTROL_PORT, callbackMap);
-  controlReader->start();
 
   LOGV("Collecting input data & sending it to Android service...");
   EventFileWriter* eventFileWriter = new EventFileWriter(EVENT_DATA_DIR);

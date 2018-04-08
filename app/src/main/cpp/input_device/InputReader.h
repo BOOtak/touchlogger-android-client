@@ -8,8 +8,9 @@
 
 #include <utils/InputDevice.h>
 #include <mappers/MultitouchInputMapper.h>
+#include "Pausable.h"
 
-class InputReader
+class InputReader : public Pausable
 {
 public:
   InputReader(EventFileWriter* fileWriter, InputDevice* inputDevice);
@@ -18,7 +19,12 @@ public:
 
   void start();
 
+  void pause();
+
+  void resume();
+
 private:
+  volatile bool isPaused;
   EventFileWriter* fileWriter;
   InputDevice* inputDevice;
 

@@ -70,6 +70,7 @@ target_link_libraries(dirty
 
 add_executable_pie_nonpie(exec_payload
     ${SRC_DIR}/exec_payload.cpp
+    ${SRC_DIR}/utils/Reanimator.cpp
     )
 
 target_link_pie_nonpie(exec_payload

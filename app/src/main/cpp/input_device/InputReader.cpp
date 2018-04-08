@@ -12,7 +12,7 @@
 #include "../dirty/common/logging.h"
 
 InputReader::InputReader(EventFileWriter* fileWriter, InputDevice* inputDevice)
-    : inputDevice(inputDevice), multiTouchInputMapper(NULL), fileWriter(fileWriter)
+    : inputDevice(inputDevice), multiTouchInputMapper(NULL), fileWriter(fileWriter), isPaused(false)
 {}
 
 void InputReader::start()
@@ -40,9 +40,26 @@ void InputReader::start()
     for (i = 0; i < read_items; ++i)
     {
       input_event event = read_buffer[i];
-      multiTouchInputMapper->process(&event);
+      if (__sync_bool_compare_and_swap(&isPaused, 0, 0))
+      {
+        multiTouchInputMapper->process(&event);
+      }
+      else
+      {
+        // drop input event
+      }
     }
   }
+}
+
+void InputReader::pause()
+{
+  __sync_bool_compare_and_swap(&isPaused, 0, 1);
+}
+
+void InputReader::resume()
+{
+  __sync_bool_compare_and_swap(&isPaused, 1, 0);
 }
 
 InputReader::~InputReader()

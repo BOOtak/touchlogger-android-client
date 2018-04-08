@@ -593,7 +593,7 @@ Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_writeCommandToTcp(JNIEnv 
 
   if (written == -1)
   {
-    LOGV("Unable to write data to socket: %s!", strerror(errno));
+    LOGV("Unable to write data to socket %d: %s!", (int) sockFd, strerror(errno));
     return (jboolean) false;
   }
 

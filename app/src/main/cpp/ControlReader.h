@@ -16,7 +16,7 @@ class ControlReader
 {
 public:
 
-  ControlReader(int port, std::map<std::string, control_callback> &commands);
+  ControlReader(int port, const std::map<std::string, control_callback> &commands);
 
   void start();
 
@@ -27,7 +27,7 @@ private:
   int sockFd;
   int shouldStop;
 
-  std::map<std::string, control_callback> commands;
+  const std::map<std::string, control_callback> commands;
 
   int startServerThread();
 

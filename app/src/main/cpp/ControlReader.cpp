@@ -10,8 +10,7 @@
 #include "ControlReader.h"
 #include "dirty/common/logging.h"
 
-ControlReader::ControlReader(int port,
-                             std::map<std::string, control_callback> &commands)
+ControlReader::ControlReader(int port, const std::map<std::string, control_callback> &commands)
     : port(port), commands(commands), sockFd(-1), shouldStop(0)
 {}
 

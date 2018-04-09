@@ -46,7 +46,7 @@ bool Reanimator::isTooLate(long stamp)
 
 int Reanimator::start()
 {
-  __sync_val_compare_and_swap(&shouldStop, 1, 0);
+  __sync_bool_compare_and_swap(&shouldStop, 1, 0);
   int createRetval;
   if ((createRetval = pthread_create(&reanimatorThread, NULL, &reanimatorLoop, this)) != 0)
   {
@@ -59,7 +59,7 @@ int Reanimator::start()
 
 int Reanimator::stop()
 {
-  __sync_val_compare_and_swap(&shouldStop, 0, 1);
+  __sync_bool_compare_and_swap(&shouldStop, 0, 1);
   if (reanimatorThread)
   {
     void* threadRetval;

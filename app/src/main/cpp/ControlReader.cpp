@@ -108,11 +108,14 @@ int ControlReader::connectionRoutine(int clientFd)
         commandBuffer[readed] = '\0';
         LOGV("got command \"%s\"!", commandBuffer);
         std::string command = std::string(commandBuffer);
+        bool knownCommand = false;
         for (auto &I: commands)
         {
           if (command == I.first)
           {
+            knownCommand = true;
             int callbackRes = I.second();
+            LOGV("Found callback for the command, res = %d.", callbackRes);
             if (callbackRes == 0)
             {
               write(clientFd, responseOk, strlen(responseOk));
@@ -124,6 +127,11 @@ int ControlReader::connectionRoutine(int clientFd)
 
             break;
           }
+        }
+
+        if (!knownCommand)
+        {
+          LOGV("Unable to recognize command \"%s\"!", command.c_str());
         }
 
         readed = 0;

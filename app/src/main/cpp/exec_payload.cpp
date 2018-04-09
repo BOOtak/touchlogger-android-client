@@ -27,7 +27,7 @@ typedef int getcon_t(char** con);
 #define SERVICE                 ".service.PayloadWaitingService"
 #define ACTION                  "org.leyfer.thesis.touchlogger_dirty.service.action.WAIT_FOR_PAYLOAD"
 #define CONTROL_PORT            10500
-#define HEARTBEAT_INTERVAL_MS   100 * 1000  // 100 ms
+#define HEARTBEAT_INTERVAL_US   1000 * 1000  // 1000 secs
 
 static const std::string heartbeatCommand = "heartbeat\n";
 static const std::string pauseCommand = "pause\n";
@@ -299,7 +299,7 @@ int main(int argc, const char** argv)
   }
 
   LOGV("Starting reanimator...");
-  reanimator = new Reanimator(HEARTBEAT_INTERVAL_MS, startServceAndWaitForItToBecomeOnline);
+  reanimator = new Reanimator(HEARTBEAT_INTERVAL_US, startServceAndWaitForItToBecomeOnline);
   reanimator->start();
 
   LOGV("Collecting input data & sending it to Android service...");

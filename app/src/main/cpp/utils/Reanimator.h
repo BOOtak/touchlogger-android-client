@@ -35,7 +35,11 @@ private:
 
   const useconds_t checkInterval;
 
-  static long getTimeStampMs();
+  /**
+   * Get current monotonic clock timestamp in microseconds.
+   * @return Current monotonic clock timestamp in microseconds.
+   */
+  static long getTimeStampUs();
 
   bool isTooLate(long stamp);
 

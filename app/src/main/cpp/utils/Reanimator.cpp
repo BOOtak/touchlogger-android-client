@@ -15,19 +15,19 @@
 #define MS_IN_SEC   1000 * 1000L
 #define MS_IN_NS    1000L
 
-Reanimator::Reanimator(useconds_t maxHeartBeatIntervalMs, reanimate_callback_t reanimateFunc)
-    : maxHeartBeatInterval(maxHeartBeatIntervalMs), reanimateCallback(reanimateFunc),
-      checkInterval(maxHeartBeatIntervalMs / 2), lastHeartbeatTimeStamp(0), shouldStop(false),
+Reanimator::Reanimator(useconds_t maxHeartBeatInterval, reanimate_callback_t reanimateFunc)
+    : maxHeartBeatInterval(maxHeartBeatInterval), reanimateCallback(reanimateFunc),
+      checkInterval(maxHeartBeatInterval / 2), lastHeartbeatTimeStamp(0), shouldStop(false),
       reanimatorThread(NULL)
 {}
 
 int Reanimator::onHeartBeat()
 {
-  lastHeartbeatTimeStamp = getTimeStampMs();
+  lastHeartbeatTimeStamp = getTimeStampUs();
   return 0;
 }
 
-long Reanimator::getTimeStampMs()
+long Reanimator::getTimeStampUs()
 {
   timespec ts;
   if (clock_gettime(CLOCK_MONOTONIC, &ts) == -1)
@@ -85,7 +85,7 @@ void* Reanimator::reanimatorLoop(void* param)
   while (__sync_bool_compare_and_swap(&(cls->shouldStop), 0, 0))
   {
     usleep(cls->checkInterval);
-    long currentTimeStamp = getTimeStampMs();
+    long currentTimeStamp = getTimeStampUs();
     if (cls->isTooLate(currentTimeStamp))
     {
       LOGV("There is no info from service for more than %li us, reanimating it!",

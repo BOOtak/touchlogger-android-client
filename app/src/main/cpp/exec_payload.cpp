@@ -300,6 +300,7 @@ int main(int argc, const char** argv)
 
   LOGV("Starting reanimator...");
   reanimator = new Reanimator(HEARTBEAT_INTERVAL_MS, startServceAndWaitForItToBecomeOnline);
+  reanimator->start();
 
   LOGV("Collecting input data & sending it to Android service...");
   EventFileWriter* eventFileWriter = new EventFileWriter(EVENT_DATA_DIR);

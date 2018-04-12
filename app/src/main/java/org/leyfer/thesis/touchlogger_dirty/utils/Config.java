@@ -22,6 +22,8 @@ public class Config {
                     .getAbsolutePath();
 
     public static final String HEARTBEAT_COMMAND = "heartbeat";
+    public static final String PAUSE_COMMAND = "pause";
+    public static final String RESUME_COMMAND = "resume";
     public static final long HEARTBEAT_INTERVAL_MS = 1000;
     public static final int PAYLOAD_PORT = 10500;
 }

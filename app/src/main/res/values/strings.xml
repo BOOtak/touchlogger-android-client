@@ -15,4 +15,7 @@
     <string name="_x">x:</string>
     <string name="_y">y:</string>
     <string name="_0">0</string>
+    <string name="payload_status">Status: %1$s</string>
+    <string name="action_pause">Pause</string>
+    <string name="action_resume">Resume</string>
 </resources>

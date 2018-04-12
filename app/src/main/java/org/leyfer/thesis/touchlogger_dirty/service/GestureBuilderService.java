@@ -9,18 +9,15 @@ import org.greenrobot.eventbus.EventBus;
 import org.leyfer.thesis.touchlogger_dirty.InputDataReader;
 import org.leyfer.thesis.touchlogger_dirty.activity.MainActivity;
 import org.leyfer.thesis.touchlogger_dirty.event.NewMatchingFileEvent;
+import org.leyfer.thesis.touchlogger_dirty.notification.ControlNotification;
 import org.leyfer.thesis.touchlogger_dirty.utils.Config;
-import org.leyfer.thesis.touchlogger_dirty.utils.writer.ControlWriter;
 import org.leyfer.thesis.touchlogger_dirty.utils.HeartBeatSender;
+import org.leyfer.thesis.touchlogger_dirty.utils.writer.ControlWriter;
 import org.leyfer.thesis.touchlogger_dirty.utils.writer.TCPSocketControlWriter;
 
-import java.io.File;
-import java.io.IOException;
-
-import static org.leyfer.thesis.touchlogger_dirty.utils.Config.CONTROL_FILENAME;
+import static org.leyfer.thesis.touchlogger_dirty.notification.ControlNotification.GESTURE_CONTROLLER_NOTIFICATION_ID;
 import static org.leyfer.thesis.touchlogger_dirty.utils.Config.HEARTBEAT_COMMAND;
 import static org.leyfer.thesis.touchlogger_dirty.utils.Config.INPUT_DATA_DIR;
-import static org.leyfer.thesis.touchlogger_dirty.utils.JniApi.initPayloadConnection;
 
 
 public class GestureBuilderService extends IntentService {
@@ -54,12 +51,27 @@ public class GestureBuilderService extends IntentService {
                 Config.TOUCH_DATA_FILE_BASE_NAME, INPUT_DATA_DIR, getApplicationContext()
         );
 
-        ControlWriter controlWriter;
-
-        controlWriter = new TCPSocketControlWriter(Config.PAYLOAD_PORT);
+        final ControlWriter controlWriter = new TCPSocketControlWriter(Config.PAYLOAD_PORT);
         controlWriter.start();
         new HeartBeatSender(
                 Config.HEARTBEAT_INTERVAL_MS, HEARTBEAT_COMMAND, controlWriter).start();
+
+        startForeground(GESTURE_CONTROLLER_NOTIFICATION_ID,
+                new ControlNotification(getApplicationContext()).getNotification());
+
+        ControlNotification.NotificationActionReceiver receiver =
+                new ControlNotification.NotificationActionReceiver() {
+                    @Override
+                    public void onPause() {
+                        controlWriter.addCommand(Config.PAUSE_COMMAND);
+                    }
+
+                    @Override
+                    public void onResume() {
+                        controlWriter.addCommand(Config.RESUME_COMMAND);
+                    }
+                };
+        registerReceiver(receiver, receiver.getIntentFilter());
 
         EventBus.getDefault().register(inputDataReader);
         Log.d(MainActivity.TAG, String.format("Registered! Overall: %b",

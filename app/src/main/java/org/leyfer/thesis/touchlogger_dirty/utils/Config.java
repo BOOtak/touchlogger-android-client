@@ -21,8 +21,6 @@ public class Config {
             new File(Environment.getExternalStorageDirectory().getPath(), "touch_logger")
                     .getAbsolutePath();
 
-    public static final String CONTROL_FILENAME = "control";
-
     public static final String HEARTBEAT_COMMAND = "heartbeat";
     public static final long HEARTBEAT_INTERVAL_MS = 1000;
     public static final int PAYLOAD_PORT = 10500;

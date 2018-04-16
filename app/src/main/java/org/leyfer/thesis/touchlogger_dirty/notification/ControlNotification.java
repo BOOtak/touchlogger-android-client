@@ -39,8 +39,8 @@ public class ControlNotification {
         builder = new NotificationCompat.Builder(context);
         notificationManager = (NotificationManager)
                 context.getSystemService(Context.NOTIFICATION_SERVICE);
-        setOffline();
-        onResumed();
+        setOfflineUi();
+        onResumedUi();
         updateNotification();
     }
 
@@ -64,24 +64,45 @@ public class ControlNotification {
         builder.setContentTitle(context.getString(R.string.payload_status, status));
     }
 
-    public void setOnline() {
+    private void setOnlineUi() {
         setStatus(STATUS_ONLINE);
     }
 
-    public void setOffline() {
-        setStatus(STATUS_OFFLINE);
+    public void setOnline() {
+        setOnlineUi();
+        updateNotification();
     }
 
-    public void onPaused() {
+    private void setOfflineUi() {
+        setStatus(STATUS_OFFLINE);
+
+    }
+
+    public void setOffline() {
+        setOfflineUi();
+        updateNotification();
+    }
+
+    private void onPausedUi() {
         builder.setSmallIcon(R.drawable.ic_paused);
         builder.mActions.clear();
         builder.addAction(resumeAction);
     }
 
-    public void onResumed() {
+    public void onPaused() {
+        onPausedUi();
+        updateNotification();
+    }
+
+    private void onResumedUi() {
         builder.setSmallIcon(R.drawable.ic_logging);
         builder.mActions.clear();
         builder.addAction(pauseAction);
+    }
+
+    public void onResumed() {
+        onResumedUi();
+        updateNotification();
     }
 
     public abstract static class NotificationActionReceiver extends BroadcastReceiver {

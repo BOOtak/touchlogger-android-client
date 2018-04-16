@@ -597,8 +597,28 @@ Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_writeCommandToTcp(JNIEnv 
     return (jboolean) false;
   }
 
-  return (jboolean) true;
-}extern "C"
+  char* returnValue;
+  ssize_t readed = read_command((int) sockFd, &returnValue);
+
+  if (readed == -1)
+  {
+    LOGV("Unable to read response from TCP socket!");
+    return (jboolean) false;
+  }
+
+  if (strcmp(returnValue, RESPONSE_OK) == 0)
+  {
+    return (jboolean) true;
+  } else if (strcmp(returnValue, RESPONSE_ERROR) == 0) {
+    LOGV("Got error response!");
+    return (jboolean) false;
+  } else {
+    LOGV("Unknown response: \"%s\"!", returnValue);
+    return (jboolean) false;
+  }
+}
+
+extern "C"
 JNIEXPORT jboolean JNICALL
 Java_org_leyfer_thesis_touchlogger_1dirty_utils_JniApi_closeTcpSocket(JNIEnv *env, jclass type,
                                                                       jint sockFd)

@@ -11,9 +11,14 @@
 #define API_METHOD
 #endif
 
+#define RESPONSE_OK "OK"
+#define RESPONSE_ERROR "Error!"
+
 API_METHOD int init_connection(int port);
 
-API_METHOD ssize_t write_command(int sock_fd, const char *command);
+API_METHOD ssize_t write_command(int sock_fd, const char* command);
+
+API_METHOD ssize_t read_command(int sock_fd, char** command);
 
 API_METHOD int close_connection(int sock_fd);
 

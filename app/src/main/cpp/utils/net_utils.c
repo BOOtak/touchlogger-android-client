@@ -9,6 +9,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <malloc.h>
 
 
 #include "net_utils.h"
@@ -41,6 +42,35 @@ int init_connection(int port) {
 
 ssize_t write_command(int sock_fd, const char *command) {
   return write(sock_fd, command, strlen(command));
+}
+
+ssize_t read_command(int sock_fd, char** command) {
+  const int bufsize = 1024;
+  char* buf = calloc(bufsize, sizeof(char));
+  if (buf == NULL) {
+    LOGV("Unable to allocate command buffer: %s!", strerror(errno));
+    return -1;
+  }
+
+  *command = buf;
+  char c;
+  int index = 0;
+  ssize_t readed;
+  while ((readed = read(sock_fd, &c, 1)) == 1)
+  {
+    if (c == '\n')
+    {
+      return index;
+    }
+
+    buf[index++] = c;
+  }
+
+  if (readed == -1) {
+    LOGV("Unable to read char from socket: %s!", strerror(errno));
+  }
+
+  return index;
 }
 
 int close_connection(int sock_fd) {

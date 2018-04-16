@@ -31,12 +31,31 @@ private:
 
   int startServerThread();
 
-  int startConnectionThread();
-
   static void* serverRoutine(void* instance);
 
-  int connectionRoutine(int clientFd);
+  static void* connectionRoutine(void* args);
 };
 
+class ConnectionRoutineArgs
+{
+public:
+  ConnectionRoutineArgs(ControlReader* instance, int acceptedConnection)
+      : controlReaderInstance(instance), acceptedConnection(acceptedConnection)
+  {}
+
+private:
+  ControlReader* controlReaderInstance;
+  int acceptedConnection;
+public:
+  inline ControlReader* getControlReaderInstance()
+  {
+    return controlReaderInstance;
+  }
+
+  inline int getAcceptedConnection()
+  {
+    return acceptedConnection;
+  }
+};
 
 #endif //TOUCHLOGGER_DIRTY_CONTROLREADER_H

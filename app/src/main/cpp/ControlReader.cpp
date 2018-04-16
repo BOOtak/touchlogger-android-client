@@ -76,31 +76,37 @@ void* ControlReader::serverRoutine(void* instance)
       close(sock_fd);
       return NULL;
     }
-
-    if (cls->connectionRoutine(acceptedConnection) == -1)
+    else
     {
-      LOGV("Connection handled ended abnormally!");
+      LOGV("Accepted connection!");
     }
 
-    close(acceptedConnection);
+    pthread_t connection_thread = -1;
+    ConnectionRoutineArgs* args = new ConnectionRoutineArgs(cls, acceptedConnection);
+    int res = pthread_create(&connection_thread, NULL, connectionRoutine, (void*) args);
+    if (res == -1)
+    {
+      LOGV("Unable to start server: %s!", strerror(errno));
+      return NULL;
+    }
   }
 
   return NULL;
 }
 
-int ControlReader::connectionRoutine(int clientFd)
+void* ControlReader::connectionRoutine(void* args)
 {
+  ConnectionRoutineArgs* cArgs = static_cast<ConnectionRoutineArgs*>(args);
+  int connection = cArgs->getAcceptedConnection();
+  ControlReader* cls = cArgs->getControlReaderInstance();
   size_t commandLength = 1024;
   char commandBuffer[commandLength], c;
   ssize_t status;
   int readed = 0;
 
-  const char* responseOk = "OK\n";
-  const char* responseError = "Error!\n";
-
-  while (__sync_bool_compare_and_swap(&shouldStop, 0, 0))
+  while (__sync_bool_compare_and_swap(&cls->shouldStop, 0, 0))
   {
-    if ((status = read(clientFd, &c, 1)) == 1)
+    if ((status = read(connection, &c, 1)) == 1)
     {
       commandBuffer[readed++] = c;
       if (c == '\n')
@@ -109,22 +115,24 @@ int ControlReader::connectionRoutine(int clientFd)
         LOGV("got command \"%s\"!", commandBuffer);
         std::string command = std::string(commandBuffer);
         bool knownCommand = false;
-        for (auto &I: commands)
+        for (auto &I: cls->commands)
         {
           if (command == I.first)
           {
             knownCommand = true;
             int callbackRes = I.second();
             LOGV("Found callback for the command, res = %d.", callbackRes);
+            const char* response;
             if (callbackRes == 0)
             {
-              write(clientFd, responseOk, strlen(responseOk));
+              response = RESPONSE_OK "\n";
             }
             else
             {
-              write(clientFd, responseError, strlen(responseError));
+              response = RESPONSE_ERROR "\n";
             }
 
+            write(connection, response, strlen(response));
             break;
           }
         }
@@ -140,7 +148,9 @@ int ControlReader::connectionRoutine(int clientFd)
     else if (status == -1)
     {
       LOGV("Unable to read data: %s!", strerror(errno));
-      return -1;
+      close(connection);
+      delete(cArgs);
+      return NULL;
     }
     else
     {
@@ -148,7 +158,9 @@ int ControlReader::connectionRoutine(int clientFd)
     }
   }
 
-  return 0;
+  close(connection);
+  delete(cArgs);
+  return NULL;
 }
 
 void ControlReader::stop()

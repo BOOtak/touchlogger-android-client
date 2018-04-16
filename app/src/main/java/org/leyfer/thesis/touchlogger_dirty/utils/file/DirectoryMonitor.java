@@ -35,11 +35,12 @@ public abstract class DirectoryMonitor {
             throws FileNotFoundException, FileIsNotDirectoryException {
 
         if (!baseDir.exists()) {
-            throw new FileNotFoundException("Unable to find base directory!");
-        }
-
-        if (!baseDir.isDirectory()) {
-            throw new FileIsNotDirectoryException("Base dir is not a directory!");
+            Log.w(MainActivity.TAG, String.format("Basedir \"%s\" does not exist. Yet?",
+                    baseDir.getAbsolutePath()));
+        } else {
+            if (!baseDir.isDirectory()) {
+                throw new FileIsNotDirectoryException("Base dir is not a directory!");
+            }
         }
 
         this.pattern = pattern;
@@ -82,8 +83,13 @@ public abstract class DirectoryMonitor {
 
 
     private void loopOnce() {
+        if (!baseDir.exists()) {
+            Log.w(MainActivity.TAG, String.format("Basedir \"%s\" does not exist. Yet?",
+                    baseDir.getAbsolutePath()));
+        }
+
         File[] contents = baseDir.listFiles();
-        if (contents.length == 0) {
+        if (contents == null || contents.length == 0) {
             return;
         }
 

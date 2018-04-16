@@ -26,4 +26,5 @@ public class Config {
     public static final String RESUME_COMMAND = "resume";
     public static final long HEARTBEAT_INTERVAL_MS = 1000;
     public static final int PAYLOAD_PORT = 10500;
+    public static final long ONLINE_TIMEOUT_MS = 2000;  // ms
 }

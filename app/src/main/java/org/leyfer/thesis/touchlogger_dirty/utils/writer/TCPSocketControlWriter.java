@@ -19,8 +19,8 @@ public class TCPSocketControlWriter extends ControlWriter {
     }
 
     @Override
-    protected void writeCommand(String command) throws IOException {
-        JniApi.writeCommandToTcp(sockFd, command + "\n");
+    protected boolean writeCommand(String command) throws IOException {
+        return JniApi.writeCommandToTcp(sockFd, command + "\n");
     }
 
     @Override

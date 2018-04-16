@@ -3,6 +3,7 @@ package org.leyfer.thesis.touchlogger_dirty.utils;
 import android.util.Log;
 
 import org.leyfer.thesis.touchlogger_dirty.activity.MainActivity;
+import org.leyfer.thesis.touchlogger_dirty.utils.writer.Command;
 import org.leyfer.thesis.touchlogger_dirty.utils.writer.ControlWriter;
 
 /**
@@ -13,10 +14,10 @@ import org.leyfer.thesis.touchlogger_dirty.utils.writer.ControlWriter;
 public class HeartBeatSender extends Thread {
 
     private final long heartbeatInterval;
-    private final String heartBeatCommand;
+    private final Command heartBeatCommand;
     private final ControlWriter controlWriter;
 
-    public HeartBeatSender(long heartbeatInterval, String heartBeatCommand, ControlWriter controlWriter) {
+    public HeartBeatSender(long heartbeatInterval, Command heartBeatCommand, ControlWriter controlWriter) {
         this.heartbeatInterval = heartbeatInterval;
         this.heartBeatCommand = heartBeatCommand;
         this.controlWriter = controlWriter;

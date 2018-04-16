@@ -11,20 +11,24 @@ import java.util.Queue;
 public abstract class ControlWriter extends Thread {
 
     private static final long SLEEP_INTERVAL = 100;  // ms
-    private final Queue<String> commandQueue = new LinkedList<>();
+    private final Queue<Command> commandQueue = new LinkedList<>();
 
     @Override
     public void run() {
         while (!isInterrupted()) {
             try {
-                String command = getNextCommand();
+                Command command = getNextCommand();
                 while (command == null && !isInterrupted()) {
                     Thread.sleep(SLEEP_INTERVAL);
                     command = getNextCommand();
                 }
 
                 if (command != null) {
-                    writeCommand(command);
+                    if (writeCommand(command.getCommandString())) {
+                        command.onSuccess();
+                    } else {
+                        command.onFailure();
+                    }
                 }
             } catch (IOException e) {
                 break;
@@ -36,15 +40,15 @@ public abstract class ControlWriter extends Thread {
         closeWriter();
     }
 
-    protected abstract void writeCommand(String command) throws IOException;
+    protected abstract boolean writeCommand(String command) throws IOException;
 
     protected abstract void closeWriter();
 
-    public synchronized void addCommand(String command) {
+    public synchronized void addCommand(Command command) {
         commandQueue.add(command);
     }
 
-    private synchronized String getNextCommand() {
+    private synchronized Command getNextCommand() {
         return commandQueue.poll();
     }
 }

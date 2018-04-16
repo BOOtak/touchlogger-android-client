@@ -34,15 +34,6 @@
             android:name=".service.GestureBuilderService"
             android:exported="false">
         </service>
-
-        <receiver
-            android:name=".receiver.PayloadHeartBeatReceiver"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="org.leyfer.thesis.heartbeat"/>
-            </intent-filter>
-        </receiver>
     </application>
 
 </manifest>

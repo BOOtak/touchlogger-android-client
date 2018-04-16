@@ -1,6 +1,6 @@
 package org.leyfer.thesis.touchlogger_dirty.event;
 
-public class TouchCoordinatesEvent {
+public class TouchCoordinatesEvent extends Event {
     public int x;
     public int y;
 

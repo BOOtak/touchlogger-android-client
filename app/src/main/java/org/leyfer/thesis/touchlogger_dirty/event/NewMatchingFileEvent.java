@@ -6,7 +6,7 @@ import java.io.File;
  * Created by k.leyfer on 09.10.2017.
  */
 
-public class NewMatchingFileEvent {
+public class NewMatchingFileEvent extends Event {
     private final File file;
 
     public NewMatchingFileEvent(File file) {

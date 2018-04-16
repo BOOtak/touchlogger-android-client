@@ -194,6 +194,7 @@ int onPause()
 {
   if (inputReader != nullptr)
   {
+    LOGV("Pause inputReader");
     inputReader->pause();
     return 0;
   }
@@ -208,6 +209,7 @@ int onResume()
 {
   if (inputReader != nullptr)
   {
+    LOGV("Resume inputReader");
     inputReader->resume();
     return 0;
   }

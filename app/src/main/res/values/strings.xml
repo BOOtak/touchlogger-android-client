@@ -18,4 +18,6 @@
     <string name="payload_status">Status: %1$s</string>
     <string name="action_pause">Pause</string>
     <string name="action_resume">Resume</string>
+    <string name="channel_name">Touch Logger</string>
+    <string name="channel_description">Service collecting touch events system-wide</string>
 </resources>

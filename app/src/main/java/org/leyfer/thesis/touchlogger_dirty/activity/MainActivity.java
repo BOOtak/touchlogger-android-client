@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        TextView tv = (TextView) findViewById(R.id.sample_text);
+        TextView tv = findViewById(R.id.sample_text);
 
         Bundle extras = this.getIntent().getExtras();
         boolean startedByPayload = false;
@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
         mHandler = new InjectProgressHandler(this);
 
         if (!startedByPayload) {
-            Button button = (Button) findViewById(R.id.button);
+            Button button = findViewById(R.id.button);
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

@@ -27,4 +27,11 @@ public class Config {
     public static final long HEARTBEAT_INTERVAL_MS = 1000;
     public static final int PAYLOAD_PORT = 10500;
     public static final long ONLINE_TIMEOUT_MS = 2000;  // ms
+    public static final int GESTURES_BUFFER_SIZE = 20; // gestures
+    public static final String DEFAULT_URL = "http://192.168.0.103:9002";
+
+    public static long UPLOAD_JOB_START_IN_MS = 60 * 1000;
+    public static long UPLOAD_JOB_INTERVAL_MS = 15 * 60 * 1000;
+    public static long UPLOAD_JOB_FLEX_MS = 5 * 60 * 1000;
+    public static long UPLOAD_JOB_END_IN_MS = 60 * 1000;
 }

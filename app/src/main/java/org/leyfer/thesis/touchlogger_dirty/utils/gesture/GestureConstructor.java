@@ -17,10 +17,7 @@ import java.util.List;
 public abstract class GestureConstructor {
     private final List<TouchEvent> touchEventAccumulator = new ArrayList<>();
 
-    private final String deviceId;
-
-    protected GestureConstructor(String deviceId) {
-        this.deviceId = deviceId;
+    protected GestureConstructor() {
     }
 
     public void addTouchEvent(TouchEvent touchEvent) {
@@ -35,7 +32,7 @@ public abstract class GestureConstructor {
                         touchEventAccumulator.get(0).getTimestamp()));
                 touchEventAccumulator.clear();
             } else {
-                Gesture gesture = new Gesture(deviceId, touchEventAccumulator);
+                Gesture gesture = new Gesture(touchEventAccumulator);
 
                 Log.d(MainActivity.TAG, String.format(
                         "Got new gesture, %d ns long, of %d pointer(s)",

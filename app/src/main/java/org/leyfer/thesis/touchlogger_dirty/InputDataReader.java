@@ -1,5 +1,6 @@
 package org.leyfer.thesis.touchlogger_dirty;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.provider.Settings;
 import android.util.Log;
@@ -18,9 +19,12 @@ import org.leyfer.thesis.touchlogger_dirty.exception.FileIsNotDirectoryException
 import org.leyfer.thesis.touchlogger_dirty.exception.InvalidTouchEventDataException;
 import org.leyfer.thesis.touchlogger_dirty.pojo.Event;
 import org.leyfer.thesis.touchlogger_dirty.pojo.Gesture;
+import org.leyfer.thesis.touchlogger_dirty.pojo.Gestures;
 import org.leyfer.thesis.touchlogger_dirty.pojo.Pointer;
 import org.leyfer.thesis.touchlogger_dirty.pojo.TouchEvent;
 import org.leyfer.thesis.touchlogger_dirty.pojo.Window;
+import org.leyfer.thesis.touchlogger_dirty.pojo.wrapper.Fillable;
+import org.leyfer.thesis.touchlogger_dirty.task.SaveGesturesTask;
 import org.leyfer.thesis.touchlogger_dirty.utils.SPWrapper;
 import org.leyfer.thesis.touchlogger_dirty.utils.file.DirectoryMonitor;
 import org.leyfer.thesis.touchlogger_dirty.utils.file.FileListPoller;
@@ -35,21 +39,32 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import static org.leyfer.thesis.touchlogger_dirty.utils.Config.GESTURES_BUFFER_SIZE;
+
 public class InputDataReader {
     private final String touchInputFileBaseName;
     private final String inputDataDirPath;
     private final Context context;
+    private final Gestures gestures;
+    private final String deviceId;
+    private final File logDataDirectory;
 
     private boolean stop = false;
 
     private FileListPoller fileListPoller;
     private GestureConstructor gestureConstructor;
     private DirectoryMonitor directoryMonitor;
+    private Fillable<Gesture> gesturesFillable;
 
+    @SuppressLint("HardwareIds")
     public InputDataReader(String touchInputFileBaseName, String inputDataDirPath, Context context) {
         this.touchInputFileBaseName = touchInputFileBaseName;
         this.inputDataDirPath = inputDataDirPath;
         this.context = context;
+        gestures = new Gestures();
+        deviceId = Settings.Secure.getString(context.getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+        logDataDirectory = context.getFilesDir();
     }
 
     private void processInputData() throws FileNotFoundException, FileIsNotDirectoryException {
@@ -71,15 +86,25 @@ public class InputDataReader {
 
         directoryMonitor.start();
 
-        gestureConstructor = new GestureConstructor(Settings.Secure.getString(
-                context.getContentResolver(), Settings.Secure.ANDROID_ID)) {
+        gesturesFillable = new Fillable<Gesture>(GESTURES_BUFFER_SIZE, gestures.getGestures()) {
+            @Override
+            protected void onFull() {
+                saveGesturesToFile();
+            }
+        };
+
+        gestureConstructor = new GestureConstructor() {
             @Override
             public void onNewGesture(Gesture gesture) {
                 long lastTimestamp = spWrapper.getLastGestureTimestamp();
                 if (gesture.getTimestamp() < lastTimestamp) {
                     Log.d(MainActivity.TAG, "Skip already processed gesture");
                 } else {
-                    //TODO: send data on server or something
+                    if (gesturesFillable != null) {
+                        gesturesFillable.add(gesture);
+                    } else {
+                        Log.w(MainActivity.TAG, "Unable to add new gesture, no wrapper!");
+                    }
 
                     Pointer pointer = gesture.getTouchEvents().get(0).getPointers().get(0);
 
@@ -126,6 +151,10 @@ public class InputDataReader {
         };
 
         fileListPoller.startReadingFiles();
+    }
+
+    private void saveGesturesToFile() {
+        new SaveGesturesTask(logDataDirectory, deviceId).execute(new Gestures(gestures));
     }
 
     public void start() {

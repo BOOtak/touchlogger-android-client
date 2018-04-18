@@ -2,6 +2,8 @@ package org.leyfer.thesis.touchlogger_dirty.activity;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -27,6 +29,9 @@ import org.leyfer.thesis.touchlogger_dirty.utils.file.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
 
 import static org.leyfer.thesis.touchlogger_dirty.utils.Config.EXEC_PAYLOAD_NAME;
 import static org.leyfer.thesis.touchlogger_dirty.utils.file.FileUtils.unpackAsset;
@@ -81,7 +86,8 @@ public class MainActivity extends AppCompatActivity {
                                 mHandler.post(new Runnable() {
                                     @Override
                                     public void run() {
-                                        notifyPayloadInstallFailed(e.getMessage());
+                                        notifyPayloadInstallFailed(e.getMessage(),
+                                                getStackTraceString(e));
                                     }
                                 });
                             }
@@ -92,6 +98,13 @@ public class MainActivity extends AppCompatActivity {
         });
 
         checkSDCardPermission();
+    }
+
+    private String getStackTraceString(Exception e) {
+        Writer result = new StringWriter();
+        PrintWriter printWriter = new PrintWriter(result);
+        e.printStackTrace(printWriter);
+        return result.toString();
     }
 
     private void notifyManualInstallationRequired() {
@@ -113,6 +126,10 @@ public class MainActivity extends AppCompatActivity {
         if (execPayloadFile.exists()) {
             File targetFile = new File(Environment.getExternalStorageDirectory().getPath(),
                     EXEC_PAYLOAD_NAME);
+            if (!targetFile.canWrite()) {
+                throw new ManualInstallationException(
+                        "Unable to create file on SD card, check SD card permissions!");
+            }
             try {
                 FileUtils.copyFile(execPayloadFile, targetFile);
                 if (!targetFile.setReadable(true, false)) {
@@ -129,8 +146,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void notifyPayloadInstallFailed(String message) {
+    private void notifyPayloadInstallFailed(String message, String stackTrace) {
         new ErrorAlertDialog(this, message).show();
+        ClipboardManager clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+        if (clipboardManager != null) {
+            ClipData clipData = ClipData.newPlainText("stacktrace", stackTrace);
+            clipboardManager.setPrimaryClip(clipData);
+            Toast.makeText(this, R.string.stack_trace_copied_to_clipboard, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void notifyPayloadIsInstalled() {

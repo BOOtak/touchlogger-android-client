@@ -4,23 +4,23 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 import org.leyfer.thesis.touchlogger_dirty.R;
-import org.leyfer.thesis.touchlogger_dirty.activity.MainActivity;
+import org.leyfer.thesis.touchlogger_dirty.event.PauseEvent;
+import org.leyfer.thesis.touchlogger_dirty.event.StatusEvent;
+
+import static org.leyfer.thesis.touchlogger_dirty.status_control.StatusController.ControlActionReceiver.getPauseIntent;
+import static org.leyfer.thesis.touchlogger_dirty.status_control.StatusController.ControlActionReceiver.getResumeIntent;
 
 public class ControlNotification {
     public static final int GESTURE_CONTROLLER_NOTIFICATION_ID = 0x7357;
 
-    private static final String STATUS_ONLINE = "online";
-    private static final String STATUS_OFFLINE = "offline";
     private static final String CHANNEL_ID = "ControlNotification_channel_1";
 
     private final Context context;
@@ -50,7 +50,7 @@ public class ControlNotification {
         }
 
         builder = new NotificationCompat.Builder(context, CHANNEL_ID);
-        setOfflineUi();
+        setStatus(context.getString(R.string.offline));
         onResumedUi();
         updateNotification();
     }
@@ -71,38 +71,21 @@ public class ControlNotification {
         notificationManager.notify(GESTURE_CONTROLLER_NOTIFICATION_ID, getNotification());
     }
 
-    private static Intent getPauseIntent() {
-        return new Intent(NotificationActionReceiver.ACTION_PAUSE);
-    }
-
-    private static Intent getResumeIntent() {
-        return new Intent(NotificationActionReceiver.ACTION_RESUME);
-    }
-
     public Notification getNotification() {
         return builder.build();
     }
 
-    private void setStatus(String status) {
+    public void setStatus(String status) {
         builder.setContentTitle(context.getString(R.string.payload_status, status));
     }
 
-    private void setOnlineUi() {
-        setStatus(STATUS_ONLINE);
-    }
-
-    public void setOnline() {
-        setOnlineUi();
+    public void setOnline(String statusString) {
+        setStatus(statusString);
         updateNotification();
     }
 
-    private void setOfflineUi() {
-        setStatus(STATUS_OFFLINE);
-
-    }
-
-    public void setOffline() {
-        setOfflineUi();
+    public void setOffline(String statusString) {
+        setStatus(statusString);
         updateNotification();
     }
 
@@ -128,37 +111,21 @@ public class ControlNotification {
         updateNotification();
     }
 
-    public abstract static class NotificationActionReceiver extends BroadcastReceiver {
-        private static final String ACTION_PAUSE = "notification_action_receiver_pause";
-        private static final String ACTION_RESUME = "notification_action_receiver_resume";
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getAction() != null) {
-                if (intent.getAction().equals(ACTION_PAUSE)) {
-                    Log.d(MainActivity.TAG, "Pausing gesture service");
-                    onPause();
-                } else if (intent.getAction().equals(ACTION_RESUME)) {
-                    Log.d(MainActivity.TAG, "Resuming gesture service");
-                    onResume();
-                } else {
-                    Log.e(MainActivity.TAG, String.format("Invalid action string: %s!",
-                            intent.getAction()));
-                }
-            } else {
-                Log.e(MainActivity.TAG, "No action string!");
-            }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onStatusEvent(StatusEvent statusEvent) {
+        if (statusEvent.getStatus() == StatusEvent.Status.STATUS_ONLINE) {
+            setOnline(statusEvent.getStatusString());
+        } else if (statusEvent.getStatus() == StatusEvent.Status.STATUS_OFFLINE) {
+            setOffline(statusEvent.getStatusString());
         }
+    }
 
-        public IntentFilter getIntentFilter() {
-            IntentFilter intentFilter = new IntentFilter();
-            intentFilter.addAction(ACTION_PAUSE);
-            intentFilter.addAction(ACTION_RESUME);
-            return intentFilter;
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onPausedEvent(PauseEvent event) {
+        if (event.isPaused()) {
+            onPaused();
+        } else {
+            onResumed();
         }
-
-        public abstract void onPause();
-
-        public abstract void onResume();
     }
 }

@@ -34,4 +34,6 @@
     <string name="manual_7">./exec_payload</string>
     <string name="version">Version: %1$s</string>
     <string name="stack_trace_copied_to_clipboard">Stack trace copied to clipboard</string>
+    <string name="online">online</string>
+    <string name="offline">offline</string>
 </resources>

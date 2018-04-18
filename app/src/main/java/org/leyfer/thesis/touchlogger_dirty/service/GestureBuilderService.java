@@ -8,9 +8,11 @@ import android.util.Log;
 
 import org.greenrobot.eventbus.EventBus;
 import org.leyfer.thesis.touchlogger_dirty.InputDataReader;
+import org.leyfer.thesis.touchlogger_dirty.R;
 import org.leyfer.thesis.touchlogger_dirty.activity.MainActivity;
 import org.leyfer.thesis.touchlogger_dirty.event.NewMatchingFileEvent;
 import org.leyfer.thesis.touchlogger_dirty.notification.ControlNotification;
+import org.leyfer.thesis.touchlogger_dirty.status_control.StatusController;
 import org.leyfer.thesis.touchlogger_dirty.utils.Config;
 import org.leyfer.thesis.touchlogger_dirty.utils.HeartBeatSender;
 import org.leyfer.thesis.touchlogger_dirty.utils.writer.Command;
@@ -27,9 +29,10 @@ public class GestureBuilderService extends IntentService {
 
     private InputDataReader inputDataReader;
     private ControlNotification controlNotification;
+    private StatusController statusController;
     private ControlWriter controlWriter;
     private Handler commandHandler;
-    private ControlNotification.NotificationActionReceiver notificationReceiver;
+    private StatusController.ControlActionReceiver notificationReceiver;
 
     public GestureBuilderService() {
         super("GestureBuilderService");
@@ -62,13 +65,18 @@ public class GestureBuilderService extends IntentService {
         new HeartBeatSender(
                 Config.HEARTBEAT_INTERVAL_MS, new HeartbeatCommand(), controlWriter).start();
 
-        controlNotification = new ControlNotification(getApplicationContext());
+        controlNotification = new ControlNotification(this);
+        EventBus.getDefault().register(controlNotification);
         startForeground(GESTURE_CONTROLLER_NOTIFICATION_ID, controlNotification.getNotification());
+
+        statusController = new StatusController(getString(R.string.online),
+                getString(R.string.offline));
 
         commandHandler = new Handler(getMainLooper());
 
         notificationReceiver = new NotificationReceiver(new PauseCommand(), new ResumeCommand());
-        registerReceiver(notificationReceiver, notificationReceiver.getIntentFilter());
+        registerReceiver(notificationReceiver,
+                StatusController.ControlActionReceiver.getIntentFilter());
 
         EventBus.getDefault().register(inputDataReader);
         Log.d(MainActivity.TAG, String.format("Registered! Overall: %b",
@@ -88,9 +96,10 @@ public class GestureBuilderService extends IntentService {
                     EventBus.getDefault().hasSubscriberForEvent(NewMatchingFileEvent.class)));
             inputDataReader.stop();
         }
+        EventBus.getDefault().unregister(controlNotification);
     }
 
-    private class NotificationReceiver extends ControlNotification.NotificationActionReceiver {
+    private class NotificationReceiver extends StatusController.ControlActionReceiver {
         private final Command onPauseCommand;
         private final Command onResumeCommand;
 
@@ -129,7 +138,7 @@ public class GestureBuilderService extends IntentService {
                 commandHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        controlNotification.onResumed();
+                        statusController.onResumed();
                     }
                 });
             } else {
@@ -155,7 +164,7 @@ public class GestureBuilderService extends IntentService {
                 commandHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        controlNotification.onPaused();
+                        statusController.onPaused();
                     }
                 });
             } else {
@@ -185,7 +194,7 @@ public class GestureBuilderService extends IntentService {
                 commandHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        controlNotification.setOnline();
+                        statusController.setOnline();
                     }
                 });
             } else {
@@ -205,7 +214,7 @@ public class GestureBuilderService extends IntentService {
                     commandHandler.post(new Runnable() {
                         @Override
                         public void run() {
-                            controlNotification.setOffline();
+                            statusController.setOffline();
                         }
                     });
                 } else {

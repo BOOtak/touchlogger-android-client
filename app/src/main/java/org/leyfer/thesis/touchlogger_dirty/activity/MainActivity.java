@@ -176,12 +176,6 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
 
-        try {
-            prepareManualInstallation();
-        } catch (ManualInstallationException e) {
-            return false;
-        }
-
         String srcPath = new File(getFilesDir(), EXEC_PAYLOAD_NAME).getAbsolutePath();
         String dstPath = "/data/local/tmp/exec_payload";
         String successMessage = "success!";

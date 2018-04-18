@@ -27,6 +27,7 @@ typedef int getcon_t(char** con);
 #define CONTROL_PORT            10500
 #define HEARTBEAT_INTERVAL_US   1000 * 1000  // 1000 secs
 
+#define SELINUX_PATH "/sys/fs/selinux/"
 static const std::string heartbeatCommand = "heartbeat\n";
 static const std::string pauseCommand = "pause\n";
 static const std::string resumeCommand = "resume\n";
@@ -108,8 +109,26 @@ int isServiceProcessActive()
   }
 }
 
+bool has_selinux()
+{
+  struct stat st;
+  if (stat(SELINUX_PATH, &st) == -1)
+  {
+    LOGV("No selinux.");
+    return false;
+  }
+
+  return S_ISDIR(st.st_mode);
+}
+
 int getSelinuxContext(char** context)
 {
+  if (!has_selinux())
+  {
+    return -1;
+  }
+
+  LOGV("Trying to get SELinux context");
   dlerror();
 #ifdef __aarch64__
   void* selinux = dlopen("/system/lib64/libselinux.so", RTLD_LAZY);

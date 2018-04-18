@@ -29,6 +29,8 @@ public class ControlNotification {
     private final NotificationCompat.Action resumeAction;
     private final NotificationManager notificationManager;
 
+    private StatusEvent.Status currentStatus = StatusEvent.Status.STATUS_OFFLINE;
+
     public ControlNotification(Context context) {
         this.context = context;
 
@@ -114,9 +116,13 @@ public class ControlNotification {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onStatusEvent(StatusEvent statusEvent) {
         if (statusEvent.getStatus() == StatusEvent.Status.STATUS_ONLINE) {
-            setOnline(statusEvent.getStatusString());
+            if (currentStatus != StatusEvent.Status.STATUS_ONLINE) {
+                setOnline(statusEvent.getStatusString());
+            }
         } else if (statusEvent.getStatus() == StatusEvent.Status.STATUS_OFFLINE) {
-            setOffline(statusEvent.getStatusString());
+            if (currentStatus != StatusEvent.Status.STATUS_OFFLINE) {
+                setOffline(statusEvent.getStatusString());
+            }
         }
     }
 

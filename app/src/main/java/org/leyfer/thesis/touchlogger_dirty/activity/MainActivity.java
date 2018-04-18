@@ -18,6 +18,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.leyfer.thesis.touchlogger_dirty.BuildConfig;
 import org.leyfer.thesis.touchlogger_dirty.R;
 import org.leyfer.thesis.touchlogger_dirty.dialog.ErrorAlertDialog;
 import org.leyfer.thesis.touchlogger_dirty.exception.ManualInstallationException;
@@ -48,8 +49,10 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        TextView tv = findViewById(R.id.sample_text);
-        tv.setText(R.string.science);
+        TextView hello = findViewById(R.id.sample_text);
+        hello.setText(R.string.science);
+        TextView version = findViewById(R.id.version);
+        version.setText(getString(R.string.version, BuildConfig.VERSION_NAME));
 
         mHandler = new Handler(getMainLooper());
 

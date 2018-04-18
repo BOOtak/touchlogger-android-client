@@ -1,9 +1,11 @@
 package org.leyfer.thesis.touchlogger_dirty.activity;
 
 import android.Manifest;
+import android.app.PendingIntent;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -20,10 +22,16 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 import org.leyfer.thesis.touchlogger_dirty.BuildConfig;
 import org.leyfer.thesis.touchlogger_dirty.R;
 import org.leyfer.thesis.touchlogger_dirty.dialog.ErrorAlertDialog;
+import org.leyfer.thesis.touchlogger_dirty.event.PauseEvent;
+import org.leyfer.thesis.touchlogger_dirty.event.StatusEvent;
 import org.leyfer.thesis.touchlogger_dirty.exception.ManualInstallationException;
+import org.leyfer.thesis.touchlogger_dirty.status_control.StatusController;
 import org.leyfer.thesis.touchlogger_dirty.utils.file.FileUtils;
 
 import java.io.File;
@@ -44,6 +52,11 @@ public class MainActivity extends AppCompatActivity {
     private static final int PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
     private Handler mHandler;
 
+    private TextView statusTv;
+    private Button togglePauseButton;
+
+    private StatusEvent.Status currentStatus = StatusEvent.Status.STATUS_OFFLINE;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,6 +72,11 @@ public class MainActivity extends AppCompatActivity {
         hello.setText(R.string.science);
         TextView version = findViewById(R.id.version);
         version.setText(getString(R.string.version, BuildConfig.VERSION_NAME));
+        statusTv = findViewById(R.id.status_text);
+        togglePauseButton = findViewById(R.id.toggle_pause);
+
+        setOffline(getString(R.string.offline));
+        onResumed();
 
         mHandler = new Handler(getMainLooper());
 
@@ -274,5 +292,73 @@ public class MainActivity extends AppCompatActivity {
         });
 
         errorAlertDialog.show();
+    }
+
+    @Override
+    protected void onPause() {
+        EventBus.getDefault().unregister(this);
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        EventBus.getDefault().register(this);
+    }
+
+    private void onPaused() {
+        togglePauseButton.setText(R.string.action_resume);
+        togglePauseButton.setOnClickListener(new PausedCliciListener());
+    }
+
+    private void onResumed() {
+        togglePauseButton.setText(R.string.action_pause);
+        togglePauseButton.setOnClickListener(new ResumedClickListener());
+    }
+
+    private void setOnline(String status) {
+        statusTv.setText(getString(R.string.payload_status, status));
+    }
+
+    private void setOffline(String status) {
+        statusTv.setText(getString(R.string.payload_status, status));
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onStatusEvent(StatusEvent statusEvent) {
+        if (statusEvent.getStatus() == StatusEvent.Status.STATUS_ONLINE) {
+            if (currentStatus != StatusEvent.Status.STATUS_ONLINE) {
+                setOnline(statusEvent.getStatusString());
+            }
+        } else if (statusEvent.getStatus() == StatusEvent.Status.STATUS_OFFLINE) {
+            if (currentStatus != StatusEvent.Status.STATUS_OFFLINE) {
+                setOffline(statusEvent.getStatusString());
+            }
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onPausedEvent(PauseEvent event) {
+        if (event.isPaused()) {
+            onPaused();
+        } else {
+            onResumed();
+        }
+    }
+
+    private class PausedCliciListener implements View.OnClickListener {
+        @Override
+        public void onClick(View view) {
+            Intent intent = StatusController.ControlActionReceiver.getResumeIntent();
+            sendBroadcast(intent);
+        }
+    }
+
+    private class ResumedClickListener implements View.OnClickListener {
+        @Override
+        public void onClick(View view) {
+            Intent intent = StatusController.ControlActionReceiver.getPauseIntent();
+            sendBroadcast(intent);
+        }
     }
 }

@@ -140,6 +140,7 @@ public class InputDataReader {
                         }
                     } else if (event instanceof Window) {
                         Log.d(MainActivity.TAG, "Window");
+                        gestureConstructor.setWindow((Window) event);
                     } else {
                         Log.d(MainActivity.TAG, "Unknown object");
                     }

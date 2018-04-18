@@ -20,9 +20,13 @@ public class Gesture {
     @JsonProperty("events")
     private List<TouchEvent> touchEvents;
 
-    public Gesture(List<TouchEvent> touchEvents) {
+    @JsonProperty("window")
+    private Window window;
+
+    public Gesture(List<TouchEvent> touchEvents, Window window) {
         this.touchEvents = new ArrayList<>(touchEvents);
         this.timestamp = touchEvents.get(0).getTimestamp();
+        this.window = window;
         int maxPointerCountInGesture = 0;
         for (TouchEvent touchEvent : touchEvents) {
             if (maxPointerCountInGesture < touchEvent.getPointerCount()) {
@@ -66,5 +70,13 @@ public class Gesture {
 
     public void setTouchEvents(List<TouchEvent> touchEvents) {
         this.touchEvents = touchEvents;
+    }
+
+    public Window getWindow() {
+        return window;
+    }
+
+    public void setWindow(Window window) {
+        this.window = window;
     }
 }

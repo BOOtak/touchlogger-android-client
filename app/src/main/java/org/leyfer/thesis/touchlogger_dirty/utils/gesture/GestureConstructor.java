@@ -5,6 +5,7 @@ import android.util.Log;
 import org.leyfer.thesis.touchlogger_dirty.activity.MainActivity;
 import org.leyfer.thesis.touchlogger_dirty.pojo.Gesture;
 import org.leyfer.thesis.touchlogger_dirty.pojo.TouchEvent;
+import org.leyfer.thesis.touchlogger_dirty.pojo.Window;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.List;
 
 public abstract class GestureConstructor {
     private final List<TouchEvent> touchEventAccumulator = new ArrayList<>();
+    private Window window;
 
     protected GestureConstructor() {
     }
@@ -32,7 +34,7 @@ public abstract class GestureConstructor {
                         touchEventAccumulator.get(0).getTimestamp()));
                 touchEventAccumulator.clear();
             } else {
-                Gesture gesture = new Gesture(touchEventAccumulator);
+                Gesture gesture = new Gesture(touchEventAccumulator, window);
 
                 Log.d(MainActivity.TAG, String.format(
                         "Got new gesture, %d ns long, of %d pointer(s)",
@@ -45,4 +47,8 @@ public abstract class GestureConstructor {
     }
 
     public abstract void onNewGesture(Gesture gesture);
+
+    public void setWindow(Window window) {
+        this.window = window;
+    }
 }

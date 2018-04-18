@@ -24,7 +24,6 @@ import org.leyfer.thesis.touchlogger_dirty.BuildConfig;
 import org.leyfer.thesis.touchlogger_dirty.R;
 import org.leyfer.thesis.touchlogger_dirty.dialog.ErrorAlertDialog;
 import org.leyfer.thesis.touchlogger_dirty.exception.ManualInstallationException;
-import org.leyfer.thesis.touchlogger_dirty.utils.Config;
 import org.leyfer.thesis.touchlogger_dirty.utils.file.FileUtils;
 
 import java.io.File;
@@ -37,6 +36,7 @@ import java.util.List;
 import eu.chainfire.libsuperuser.Shell;
 
 import static org.leyfer.thesis.touchlogger_dirty.utils.Config.EXEC_PAYLOAD_NAME;
+import static org.leyfer.thesis.touchlogger_dirty.utils.Config.NONPIE_SUFFIX;
 import static org.leyfer.thesis.touchlogger_dirty.utils.file.FileUtils.unpackAsset;
 
 public class MainActivity extends AppCompatActivity {
@@ -198,6 +198,10 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
+    private static boolean isPieSupported() {
+        return android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN;
+    }
+
     private boolean unpackAssets() {
         String abi;
         if (android.os.Build.VERSION.SDK_INT
@@ -207,18 +211,15 @@ public class MainActivity extends AppCompatActivity {
             abi = Build.CPU_ABI;
         }
 
-        File payloadPath = unpackAsset(MainActivity.this,
-                String.format("%s/%s", abi, Config.PAYLOAD_NAME),
-                Config.PAYLOAD_NAME);
+        String execPayloadAssetName = String.format("%s/%s", abi, EXEC_PAYLOAD_NAME);
+        if (!isPieSupported()) {
+            execPayloadAssetName = String.format("%s/%s-%s", abi, EXEC_PAYLOAD_NAME, NONPIE_SUFFIX);
+        }
 
         File execPayloadPath = unpackAsset(MainActivity.this,
-                String.format("%s/%s", abi, EXEC_PAYLOAD_NAME),
-                EXEC_PAYLOAD_NAME);
+                execPayloadAssetName, EXEC_PAYLOAD_NAME);
 
-        return payloadPath != null
-                && payloadPath.exists()
-                && execPayloadPath != null
-                && execPayloadPath.exists();
+        return execPayloadPath != null && execPayloadPath.exists();
     }
 
     private void checkSDCardPermission() {

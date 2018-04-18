@@ -28,8 +28,6 @@ import org.leyfer.thesis.touchlogger_dirty.utils.file.FileUtils;
 import java.io.File;
 import java.io.IOException;
 
-import eu.chainfire.libsuperuser.Shell;
-
 import static org.leyfer.thesis.touchlogger_dirty.utils.Config.EXEC_PAYLOAD_NAME;
 import static org.leyfer.thesis.touchlogger_dirty.utils.file.FileUtils.unpackAsset;
 
@@ -63,23 +61,13 @@ public class MainActivity extends AppCompatActivity {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        if (Shell.SU.available()) {
-                            if (installPayloadViaSu()) {
-                                mHandler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        notifyPayloadIsInstalled();
-                                    }
-                                });
-                            } else {
-                                mHandler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        notifyPayloadInstallFailed(MainActivity.this.getString(
-                                                R.string.payload_install_error));
-                                    }
-                                });
-                            }
+                        if (installPayloadViaSu()) {
+                            mHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    notifyPayloadIsInstalled();
+                                }
+                            });
                         } else {
                             try {
                                 prepareManualInstallation();

@@ -24,6 +24,14 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            applicationVariants.all { variant ->
+                renameAPK(variant, defaultConfig)
+            }
+        }
+        debug {
+            applicationVariants.all { variant ->
+                renameAPK(variant, defaultConfig)
+            }
         }
     }
     externalNativeBuild {
@@ -42,6 +50,13 @@ android {
     }
     packagingOptions {
         exclude 'META-INF/LICENSE'
+    }
+}
+
+def renameAPK(variant, defaultConfig) {
+    variant.outputs.all { output ->
+        String fileName = "${applicationName}-${variant.buildType.name}-${defaultConfig.versionName}.apk"
+        outputFileName = fileName
     }
 }
 

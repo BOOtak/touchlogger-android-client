@@ -14,6 +14,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -81,7 +82,12 @@ public class MainActivity extends AppCompatActivity {
                                 mHandler.post(new Runnable() {
                                     @Override
                                     public void run() {
-                                        notifyManualInstallationRequired();
+                                        File externalStorageDirectory =
+                                                Environment.getExternalStorageDirectory();
+                                        File targetFile = new File(externalStorageDirectory,
+                                                EXEC_PAYLOAD_NAME);
+                                        notifyManualInstallationRequired(
+                                                targetFile.getAbsolutePath());
                                     }
                                 });
                             } catch (final ManualInstallationException e) {
@@ -109,9 +115,16 @@ public class MainActivity extends AppCompatActivity {
         return result.toString();
     }
 
-    private void notifyManualInstallationRequired() {
+    private void notifyManualInstallationRequired(String fileExternalStorageDirLocation) {
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View manualInstallationView = inflater.inflate
+                (R.layout.dialog_manual_payload_installation, null);
+        TextView copyCommandTextView = manualInstallationView.findViewById(R.id.copy_command);
+        copyCommandTextView.setText(
+                getString(R.string.copy_command_text, fileExternalStorageDirLocation));
+
         new AlertDialog.Builder(this)
-                .setView(R.layout.dialog_manual_payload_installation)
+                .setView(manualInstallationView)
                 .setTitle(R.string.alert_title)
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
@@ -125,12 +138,13 @@ public class MainActivity extends AppCompatActivity {
     private void prepareManualInstallation() throws ManualInstallationException {
         File execPayloadFile = new File(getFilesDir(), EXEC_PAYLOAD_NAME);
         if (execPayloadFile.exists()) {
-            File targetFile = new File(Environment.getExternalStorageDirectory().getPath(),
-                    EXEC_PAYLOAD_NAME);
-            if (!targetFile.canWrite()) {
+            File externalStorageDirectory = Environment.getExternalStorageDirectory();
+            if (!externalStorageDirectory.canWrite()) {
                 throw new ManualInstallationException(
                         "Unable to create file on SD card, check SD card permissions!");
             }
+
+            File targetFile = new File(externalStorageDirectory, EXEC_PAYLOAD_NAME);
             try {
                 FileUtils.copyFile(execPayloadFile, targetFile);
             } catch (IOException e) {

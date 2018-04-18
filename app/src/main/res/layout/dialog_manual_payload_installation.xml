@@ -25,12 +25,13 @@
         android:text="@string/manual_3"/>
 
     <TextView
+        android:id="@+id/copy_command"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="32dp"
         android:layout_marginStart="32dp"
         android:layout_marginTop="8dp"
-        android:text="@string/manual_3_1"
+        android:text="@string/copy_command_text"
         app:fontFamily="monospace"/>
 
     <TextView

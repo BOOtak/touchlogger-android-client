@@ -25,9 +25,9 @@
     <string name="payload_install_error">Touchlogger was unable to complete payload installation!</string>
     <string name="manual_1">To install touchlogger payload manually, please follow these steps:</string>
     <string name="manual_2">1. Connect to your device using ADB shell</string>
-    <string name="manual_3">2. Copy /sdcard/exec_payload to /data/local/tmp/exec_payload:</string>
+    <string name="manual_3">2. Copy exec_payload from SD card to /data/local/tmp/exec_payload:</string>
     <string name="manual_4">3. Set exec_payload to executable:</string>
-    <string name="manual_3_1">cp /sdcard/exec_payload /data/local/tmp/exec_payload</string>
+    <string name="copy_command_text">cp %1$s /data/local/tmp/exec_payload</string>
     <string name="manual_5">cd /data/local/tmp</string>
     <string name="manual_5_1">chmod 755 exec_payload</string>
     <string name="manual_6">4. Start exec_payload:</string>

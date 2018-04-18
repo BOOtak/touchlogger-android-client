@@ -1,33 +1,40 @@
 package org.leyfer.thesis.touchlogger_dirty.activity;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.leyfer.thesis.touchlogger_dirty.R;
 import org.leyfer.thesis.touchlogger_dirty.dialog.ErrorAlertDialog;
-import org.leyfer.thesis.touchlogger_dirty.handler.InjectProgressHandler;
+import org.leyfer.thesis.touchlogger_dirty.exception.ManualInstallationException;
 import org.leyfer.thesis.touchlogger_dirty.utils.Config;
-import org.leyfer.thesis.touchlogger_dirty.utils.JniApi;
+import org.leyfer.thesis.touchlogger_dirty.utils.file.FileUtils;
 
 import java.io.File;
+import java.io.IOException;
 
+import eu.chainfire.libsuperuser.Shell;
+
+import static org.leyfer.thesis.touchlogger_dirty.utils.Config.EXEC_PAYLOAD_NAME;
 import static org.leyfer.thesis.touchlogger_dirty.utils.file.FileUtils.unpackAsset;
 
 public class MainActivity extends AppCompatActivity {
     public static final String TAG = "TouchLogger-dirty";
     private static final int PERMISSION_REQUEST_WRITE_EXTERNAL_STORAGE = 1;
-    private static final String EXTRA_STARTED_BY_PAYLOAD = "org.leyfer.thesis.extra.started_by_payload";
     private Handler mHandler;
 
     @Override
@@ -42,46 +49,107 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         TextView tv = findViewById(R.id.sample_text);
+        tv.setText(R.string.science);
 
-        Bundle extras = this.getIntent().getExtras();
-        boolean startedByPayload = false;
-        if (extras != null) {
-            startedByPayload = extras.getBoolean(EXTRA_STARTED_BY_PAYLOAD, false);
-            if (startedByPayload) {
-                tv.setText(R.string.started_by_payload);
-            } else {
-                tv.setText(JniApi.stringFromJNI());
-            }
-        } else {
-            tv.setText(JniApi.stringFromJNI());
-        }
+        mHandler = new Handler(getMainLooper());
 
-        mHandler = new InjectProgressHandler(this);
-
-        if (!startedByPayload) {
-            Button button = findViewById(R.id.button);
-            button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (JniApi.prepareA(MainActivity.this.getFilesDir().getAbsolutePath())) {
-                                Log.d(TAG, "Patching target library finished!");
-                                mHandler.sendEmptyMessage(
-                                        InjectProgressHandler.PREPARE_SUCCESS);
+        Button button = findViewById(R.id.button);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (Shell.SU.available()) {
+                            if (installPayloadViaSu()) {
+                                mHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        notifyPayloadIsInstalled();
+                                    }
+                                });
                             } else {
-                                Log.e(TAG, "Unable to patch system libraries!");
-                                mHandler.sendEmptyMessage(
-                                        InjectProgressHandler.PREPARE_FAIL);
+                                mHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        notifyPayloadInstallFailed(MainActivity.this.getString(
+                                                R.string.payload_install_error));
+                                    }
+                                });
+                            }
+                        } else {
+                            try {
+                                prepareManualInstallation();
+                                mHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        notifyManualInstallationRequired();
+                                    }
+                                });
+                            } catch (final ManualInstallationException e) {
+                                mHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        notifyPayloadInstallFailed(e.getMessage());
+                                    }
+                                });
                             }
                         }
-                    }).start();
-                }
-            });
-        }
+                    }
+                }).start();
+            }
+        });
 
         checkSDCardPermission();
+    }
+
+    private void notifyManualInstallationRequired() {
+        new AlertDialog.Builder(this)
+                .setView(R.layout.dialog_manual_payload_installation)
+                .setTitle(R.string.alert_title)
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                })
+                .show();
+    }
+
+    @SuppressLint("SetWorldReadable")
+    private void prepareManualInstallation() throws ManualInstallationException {
+        File execPayloadFile = new File(getFilesDir(), EXEC_PAYLOAD_NAME);
+        if (execPayloadFile.exists()) {
+            File targetFile = new File(Environment.getExternalStorageDirectory().getPath(),
+                    EXEC_PAYLOAD_NAME);
+            try {
+                FileUtils.copyFile(execPayloadFile, targetFile);
+                if (!targetFile.setReadable(true, false)) {
+                    throw new ManualInstallationException(
+                            String.format("Unable to set file %s world-readable!",
+                                    targetFile.getAbsolutePath()));
+                }
+            } catch (IOException e) {
+                throw new ManualInstallationException(
+                        "Unable to copy payload file to SD card for manual installation!", e);
+            }
+        } else {
+            throw new ManualInstallationException("Unable to access local payload file!");
+        }
+    }
+
+    private void notifyPayloadInstallFailed(String message) {
+        new ErrorAlertDialog(this, message).show();
+    }
+
+    private void notifyPayloadIsInstalled() {
+        Toast.makeText(this, this.getString(R.string.payload_installed),
+                Toast.LENGTH_SHORT).show();
+    }
+
+    private boolean installPayloadViaSu() {
+        // FIXME: utilize libsuperuser!
+        return false;
     }
 
     private boolean unpackAssets() {
@@ -98,8 +166,8 @@ public class MainActivity extends AppCompatActivity {
                 Config.PAYLOAD_NAME);
 
         File execPayloadPath = unpackAsset(MainActivity.this,
-                String.format("%s/%s", abi, Config.EXEC_PAYLOAD_NAME),
-                Config.EXEC_PAYLOAD_NAME);
+                String.format("%s/%s", abi, EXEC_PAYLOAD_NAME),
+                EXEC_PAYLOAD_NAME);
 
         return payloadPath != null
                 && payloadPath.exists()

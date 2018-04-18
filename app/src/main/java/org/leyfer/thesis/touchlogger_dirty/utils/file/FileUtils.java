@@ -7,6 +7,7 @@ import org.leyfer.thesis.touchlogger_dirty.activity.MainActivity;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -91,5 +92,13 @@ public class FileUtils {
             total.append(line);
         }
         return total.toString();
+    }
+
+    public static void copyFile(File sourceFile, File targetFile) throws IOException {
+        InputStream inputStream = new FileInputStream(sourceFile);
+        OutputStream outputStream = new FileOutputStream(targetFile);
+        copyStream(inputStream, outputStream);
+        inputStream.close();
+        outputStream.close();
     }
 }

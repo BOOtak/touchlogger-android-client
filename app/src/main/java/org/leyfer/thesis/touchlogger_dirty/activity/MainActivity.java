@@ -1,7 +1,6 @@
 package org.leyfer.thesis.touchlogger_dirty.activity;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.DialogInterface;
@@ -120,7 +119,6 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
-    @SuppressLint("SetWorldReadable")
     private void prepareManualInstallation() throws ManualInstallationException {
         File execPayloadFile = new File(getFilesDir(), EXEC_PAYLOAD_NAME);
         if (execPayloadFile.exists()) {
@@ -132,11 +130,6 @@ public class MainActivity extends AppCompatActivity {
             }
             try {
                 FileUtils.copyFile(execPayloadFile, targetFile);
-                if (!targetFile.setReadable(true, false)) {
-                    throw new ManualInstallationException(
-                            String.format("Unable to set file %s world-readable!",
-                                    targetFile.getAbsolutePath()));
-                }
             } catch (IOException e) {
                 throw new ManualInstallationException(
                         "Unable to copy payload file to SD card for manual installation!", e);

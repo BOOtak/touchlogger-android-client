@@ -1,7 +1,6 @@
 package org.leyfer.thesis.touchlogger_dirty.activity;
 
 import android.Manifest;
-import android.app.PendingIntent;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.DialogInterface;
@@ -44,7 +43,6 @@ import java.util.List;
 import eu.chainfire.libsuperuser.Shell;
 
 import static org.leyfer.thesis.touchlogger_dirty.utils.Config.EXEC_PAYLOAD_NAME;
-import static org.leyfer.thesis.touchlogger_dirty.utils.Config.NONPIE_SUFFIX;
 import static org.leyfer.thesis.touchlogger_dirty.utils.file.FileUtils.unpackAsset;
 
 public class MainActivity extends AppCompatActivity {
@@ -216,10 +214,6 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-    private static boolean isPieSupported() {
-        return android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN;
-    }
-
     private boolean unpackAssets() {
         String abi;
         if (android.os.Build.VERSION.SDK_INT
@@ -230,9 +224,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String execPayloadAssetName = String.format("%s/%s", abi, EXEC_PAYLOAD_NAME);
-        if (!isPieSupported()) {
-            execPayloadAssetName = String.format("%s/%s-%s", abi, EXEC_PAYLOAD_NAME, NONPIE_SUFFIX);
-        }
 
         File execPayloadPath = unpackAsset(MainActivity.this,
                 execPayloadAssetName, EXEC_PAYLOAD_NAME);

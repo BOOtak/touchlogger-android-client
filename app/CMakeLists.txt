@@ -12,19 +12,7 @@ set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/main/cpp")
 set(DIRTY_SOURCES
     "${SRC_DIR}/native-lib.cpp"
     "${SRC_DIR}/utils/net_utils.c"
-    "${SRC_DIR}/dirty/common/common.c"
     "${SRC_DIR}/dirty/file_utils/file_utils.c"
-    "${SRC_DIR}/dirty/file_utils/dirty_copy.c"
-    "${SRC_DIR}/dirty/lib_utils/inject.c"
-    "${SRC_DIR}/dirty/lib_utils/elf_parser.c"
-    "${SRC_DIR}/utils/exec_utils.c"
-    "${SRC_DIR}/utils/su_utils.c"
-    )
-
-set(PAYLOAD_SOURCES
-    "${SRC_DIR}/payload.c"
-    "${SRC_DIR}/dirty/file_utils/file_utils.c"
-    "${SRC_DIR}/utils/payload_utils.c"
     )
 
 add_library(input_device STATIC
@@ -57,15 +45,6 @@ target_link_libraries(dirtycopy
     PUBLIC log
     )
 
-add_executable(dirty
-    ${DIRTY_SOURCES}
-    "${SRC_DIR}/dirty/main.c"
-    )
-
-target_link_libraries(dirty
-    PUBLIC log
-    )
-
 add_executable(exec_payload
     ${SRC_DIR}/exec_payload.cpp
     ${SRC_DIR}/utils/Reanimator.cpp
@@ -73,53 +52,4 @@ add_executable(exec_payload
 
 target_link_libraries(exec_payload
     PUBLIC log input_device
-    )
-
-add_executable(payload
-    ${PAYLOAD_SOURCES}
-    )
-
-target_link_libraries(payload
-    PUBLIC log
-    )
-
-add_custom_command(TARGET payload
-    POST_BUILD
-    COMMAND ${CMAKE_STRIP} -S --strip-unneeded
-                              --remove-section=.note.gnu.gold-version
-                              --remove-section=.comment
-                              ${EXECUTABLE_OUTPUT_PATH}/payload
-    COMMAND ${CMAKE_STRIP} -S --remove-section=.note
-                              --remove-section=.note.gnu.build-id
-                              --remove-section=.note.ABI-tag
-                              ${EXECUTABLE_OUTPUT_PATH}/payload
-    COMMAND ${CMAKE_STRIP} -S --remove-section=.got.plt
-                              --remove-section=.eh_frame
-                              --remove-section=.eh_frame_ptr
-                              --remove-section=.eh_frame_hdr
-                              ${EXECUTABLE_OUTPUT_PATH}/payload
-    )
-
-add_library(shared_payload SHARED
-    ${PAYLOAD_SOURCES}
-    )
-
-target_link_libraries(shared_payload
-    PUBLIC log
-    )
-
-set_target_properties(shared_payload PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY "${ASSETS_PATH}/${ANDROID_ABI}"
-    )
-
-add_executable(test_input
-    ${SRC_DIR}/input_device/runner.cpp
-    )
-
-target_link_libraries(test_input
-    PUBLIC log input_device
-    )
-
-add_executable(run-as
-    ${SRC_DIR}/run-as.c
     )

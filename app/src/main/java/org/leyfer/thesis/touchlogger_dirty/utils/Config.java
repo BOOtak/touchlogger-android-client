@@ -10,9 +10,7 @@ import java.io.File;
 
 public class Config {
     public static final String MAIN_LIBRARY_NAME = "dirtycopy";
-    public static final String PAYLOAD_NAME = "payload";
     public static final String EXEC_PAYLOAD_NAME = "exec_payload";
-    public static final String NONPIE_SUFFIX = "nonpie";
 
     // be sure to keep this in sync with native part
     public static final String TOUCH_DATA_FILE_BASE_NAME = "touch_event_data";

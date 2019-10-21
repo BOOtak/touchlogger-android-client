@@ -4,19 +4,17 @@ def gitCommitCount =
         Integer.parseInt('git rev-list --count HEAD'.execute([], project.rootDir).text.trim())
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion '27.0.3'
+    compileSdkVersion 28
     defaultConfig {
         applicationId "org.leyfer.thesis.touchlogger_dirty"
-        minSdkVersion 14
-        targetSdkVersion 26
+        minSdkVersion 19
+        targetSdkVersion 28
         versionCode gitCommitCount
-        versionName "2.0.$gitCommitCount"
+        versionName "2.1.$gitCommitCount"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++11"
-                arguments "-DANDROID_PIE=OFF"
             }
         }
     }
@@ -42,8 +40,8 @@ android {
     defaultConfig {
         externalNativeBuild {
             cmake {
-                targets "exec_payload", "exec_payload-nonpie", "dirtycopy"
-                abiFilters 'x86', 'x86_64', 'armeabi', 'armeabi-v7a', 'arm64-v8a'
+                targets "exec_payload", "dirtycopy"
+                abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
             }
         }
     }
@@ -65,7 +63,7 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     implementation 'com.evernote:android-job:1.2.5'
-    implementation 'com.android.support:appcompat-v7:26.1.0'
+    implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'eu.chainfire:libsuperuser:1.0.0.+'
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.1'
     implementation 'org.greenrobot:eventbus:3.0.0'

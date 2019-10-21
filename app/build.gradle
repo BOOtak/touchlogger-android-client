@@ -30,6 +30,11 @@ android {
             applicationVariants.all { variant ->
                 renameAPK(variant, defaultConfig)
             }
+            externalNativeBuild {
+                cmake {
+                    cppFlags "-DDEBUG=1"
+                }
+            }
         }
     }
     externalNativeBuild {

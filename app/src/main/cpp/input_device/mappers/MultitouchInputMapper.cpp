@@ -2,17 +2,16 @@
 // Created by k.leyfer on 11.09.2017.
 //
 
-#include <stdio.h>
+#include <cstdio>
 #include "MultitouchInputMapper.h"
-#include "../../dirty/common/logging.h"
+#include "../../common/logging.h"
 
 
 MultiTouchInputMapper::MultiTouchInputMapper(InputDevice* device, EventFileWriter* fileWriter)
     : TouchInputMapper(device, fileWriter)
 {}
 
-MultiTouchInputMapper::~MultiTouchInputMapper()
-{}
+MultiTouchInputMapper::~MultiTouchInputMapper() = default;
 
 void MultiTouchInputMapper::reset(nsecs_t when)
 {
@@ -54,7 +53,7 @@ void MultiTouchInputMapper::configureRawPointerAxes()
     if (slotCount > MAX_SLOTS)
     {
       LOGV("MultiTouch Device reported %zu slots but the framework "
-               "only supports a maximum of %zu slots at this time.",
+           "only supports a maximum of %zu slots at this time.",
            slotCount, MAX_SLOTS);
       slotCount = MAX_SLOTS;
     }

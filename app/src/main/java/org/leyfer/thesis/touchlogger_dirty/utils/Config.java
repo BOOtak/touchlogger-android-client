@@ -9,7 +9,7 @@ import java.io.File;
  */
 
 public class Config {
-    public static final String MAIN_LIBRARY_NAME = "dirtycopy";
+    public static final String MAIN_LIBRARY_NAME = "touchlogger";
     public static final String EXEC_PAYLOAD_NAME = "exec_payload";
 
     // be sure to keep this in sync with native part

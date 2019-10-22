@@ -16,7 +16,7 @@ class ControlReader
 {
 public:
 
-  ControlReader(int port, const std::map<std::string, control_callback> &commands);
+  ControlReader(int port, std::map<std::string, control_callback> commands);
 
   void start();
 

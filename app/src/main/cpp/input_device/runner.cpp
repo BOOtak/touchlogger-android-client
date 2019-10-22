@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <utils/Utils.h>
 #include "InputReader.h"
-#include "../dirty/common/logging.h"
+#include "../common/logging.h"
 #include "TestEventFileWriter.h"
 
 int main(int argc, const char** argv)

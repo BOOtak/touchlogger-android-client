@@ -2,10 +2,10 @@
 // Created by k.leyfer on 11.09.2017.
 //
 
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 #include "TouchInputMapper.h"
-#include "../../dirty/common/logging.h"
+#include "../../common/logging.h"
 
 template<typename T>
 inline static void swap(T &a, T &b)

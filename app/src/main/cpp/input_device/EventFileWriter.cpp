@@ -6,12 +6,12 @@
 #include <sys/stat.h>
 #include <vector>
 #include <unistd.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <sys/wait.h>
-#include <string.h>
+#include <cstring>
 
 #include "EventFileWriter.h"
-#include "../dirty/common/logging.h"
+#include "../common/logging.h"
 
 std::string EventFileWriter::getFileName(nsecs_t when)
 {

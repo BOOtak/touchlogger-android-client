@@ -6,12 +6,13 @@
 #include <linux/in.h>
 #include <endian.h>
 #include <unistd.h>
-#include <string.h>
+#include <cstring>
+#include <utility>
 #include "ControlReader.h"
-#include "dirty/common/logging.h"
+#include "common/logging.h"
 
-ControlReader::ControlReader(int port, const std::map<std::string, control_callback> &commands)
-    : port(port), commands(commands), sockFd(-1), shouldStop(0)
+ControlReader::ControlReader(int port, std::map<std::string, control_callback> commands)
+    : port(port), commands(std::move(commands)), sockFd(-1), shouldStop(0)
 {}
 
 void ControlReader::start()
@@ -22,7 +23,7 @@ void ControlReader::start()
 int ControlReader::startServerThread()
 {
   pthread_t server_thread = -1;
-  int res = pthread_create(&server_thread, NULL, &serverRoutine, (void*) this);
+  int res = pthread_create(&server_thread, nullptr, &serverRoutine, (void*) this);
   if (res == -1)
   {
     LOGV("Unable to start server: %s!", strerror(errno));
@@ -35,16 +36,16 @@ int ControlReader::startServerThread()
 
 void* ControlReader::serverRoutine(void* instance)
 {
-  ControlReader* cls = reinterpret_cast<ControlReader*>(instance);
+  auto* cls = reinterpret_cast<ControlReader*>(instance);
 
-  int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+  int sock_fd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0);
   if (sock_fd == -1)
   {
     LOGV("Unable to create TCP socket: %s!", strerror(errno));
-    return NULL;
+    return nullptr;
   }
 
-  struct sockaddr_in sockaddr;
+  struct sockaddr_in sockaddr{};
   sockaddr.sin_family = AF_INET;
   sockaddr.sin_addr.s_addr = INADDR_ANY;
   sockaddr.sin_port = htons(cls->port);
@@ -52,7 +53,7 @@ void* ControlReader::serverRoutine(void* instance)
   if (bind(sock_fd, (struct sockaddr*) &sockaddr, sizeof(sockaddr)) == -1)
   {
     LOGV("Unable to bind on port :%d: %s!", cls->port, strerror(errno));
-    return NULL;
+    return nullptr;
   }
 
   printf("Listening for connections...\n");
@@ -60,11 +61,11 @@ void* ControlReader::serverRoutine(void* instance)
   {
     LOGV("Unable to listen: %s!", strerror(errno));
     close(sock_fd);
-    return NULL;
+    return nullptr;
   }
 
   LOGV("Waiting for connection...");
-  struct sockaddr_in client_addr;
+  struct sockaddr_in client_addr{};
   socklen_t size = sizeof(client_addr);
 
   while (__sync_bool_compare_and_swap(&(cls->shouldStop), 0, 0))
@@ -74,7 +75,7 @@ void* ControlReader::serverRoutine(void* instance)
     {
       LOGV("Unable to accept connection: %s!", strerror(errno));
       close(sock_fd);
-      return NULL;
+      return nullptr;
     }
     else
     {
@@ -82,27 +83,29 @@ void* ControlReader::serverRoutine(void* instance)
     }
 
     pthread_t connection_thread = -1;
-    ConnectionRoutineArgs* args = new ConnectionRoutineArgs(cls, acceptedConnection);
-    int res = pthread_create(&connection_thread, NULL, connectionRoutine, (void*) args);
+    auto* args = new ConnectionRoutineArgs(cls, acceptedConnection);
+    int res = pthread_create(&connection_thread, nullptr, connectionRoutine, (void*) args);
     if (res == -1)
     {
       LOGV("Unable to start server: %s!", strerror(errno));
-      return NULL;
+      return nullptr;
     }
   }
 
-  return NULL;
+  return nullptr;
 }
 
 void* ControlReader::connectionRoutine(void* args)
 {
-  ConnectionRoutineArgs* cArgs = static_cast<ConnectionRoutineArgs*>(args);
+  auto* cArgs = static_cast<ConnectionRoutineArgs*>(args);
   int connection = cArgs->getAcceptedConnection();
   ControlReader* cls = cArgs->getControlReaderInstance();
-  size_t commandLength = 1024;
-  char commandBuffer[commandLength], c;
+  const size_t commandLength = 1024;
+  char commandBuffer[commandLength];
+  char c;
   ssize_t status;
   int readed = 0;
+  const useconds_t readTimeout = 500 * 1000;
 
   while (__sync_bool_compare_and_swap(&cls->shouldStop, 0, 0))
   {
@@ -150,17 +153,17 @@ void* ControlReader::connectionRoutine(void* args)
       LOGV("Unable to read data: %s!", strerror(errno));
       close(connection);
       delete(cArgs);
-      return NULL;
+      return nullptr;
     }
     else
     {
-      usleep(500 * 1000);
+      usleep(readTimeout);
     }
   }
 
   close(connection);
   delete(cArgs);
-  return NULL;
+  return nullptr;
 }
 
 void ControlReader::stop()

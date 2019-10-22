@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include "InputDevice.h"
-#include "../../dirty/common/logging.h"
+#include "../../common/logging.h"
 
 InputDevice::InputDevice(const char* inputDevicePath)
     : inputDevicePath(inputDevicePath)

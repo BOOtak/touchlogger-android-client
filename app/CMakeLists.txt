@@ -12,7 +12,7 @@ set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/main/cpp")
 set(DIRTY_SOURCES
     "${SRC_DIR}/native-lib.cpp"
     "${SRC_DIR}/utils/net_utils.c"
-    "${SRC_DIR}/dirty/file_utils/file_utils.c"
+    "${SRC_DIR}/utils/file_utils.c"
     )
 
 add_library(input_device STATIC
@@ -37,11 +37,11 @@ target_include_directories(input_device PUBLIC
     $<INSTALL_INTERFACE:input_device>
 )
 
-add_library(dirtycopy SHARED
+add_library(touchlogger SHARED
     ${DIRTY_SOURCES}
     )
 
-target_link_libraries(dirtycopy
+target_link_libraries(touchlogger
     PUBLIC log
     )
 

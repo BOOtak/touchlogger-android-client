@@ -13,10 +13,10 @@
 
 
 #include "net_utils.h"
-#include "../dirty/common/logging.h"
+#include "../common/logging.h"
 
 int init_connection(int port) {
-  int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+  int sock_fd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0);
   if (sock_fd == -1)
   {
     LOGV("Unable to create TCP socket: %s!", strerror(errno));

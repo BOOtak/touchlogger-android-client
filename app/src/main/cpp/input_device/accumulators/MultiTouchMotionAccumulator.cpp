@@ -2,9 +2,9 @@
 // Created by k.leyfer on 11.09.2017.
 //
 
-#include <stdio.h>
+#include <cstdio>
 #include "MultiTouchMotionAccumulator.h"
-#include "../../dirty/common/logging.h"
+#include "../../common/logging.h"
 
 MultiTouchMotionAccumulator::Slot::Slot()
 {
@@ -42,7 +42,7 @@ void MultiTouchMotionAccumulator::clearSlots(int32_t initialSlot)
 }
 
 MultiTouchMotionAccumulator::MultiTouchMotionAccumulator() :
-    mCurrentSlot(-1), mSlots(NULL), mSlotCount(0), mUsingSlotsProtocol(false)
+    mCurrentSlot(-1), mSlots(nullptr), mSlotCount(0), mUsingSlotsProtocol(false)
 {}
 
 MultiTouchMotionAccumulator::~MultiTouchMotionAccumulator()

@@ -45,7 +45,7 @@ android {
     defaultConfig {
         externalNativeBuild {
             cmake {
-                targets "exec_payload", "dirtycopy"
+                targets "exec_payload", "touchlogger"
                 abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
             }
         }

@@ -3,17 +3,17 @@
 //
 
 #include <linux/time.h>
-#include <time.h>
+#include <ctime>
 #include <cstdio>
 #include <pthread.h>
 #include <unistd.h>
-#include <string.h>
+#include <cstring>
 #include <cerrno>
 #include "Reanimator.h"
-#include "../dirty/common/logging.h"
+#include "../common/logging.h"
 
-#define MS_IN_SEC   1000 * 1000L
-#define MS_IN_NS    1000L
+constexpr auto MS_IN_SEC = 1000 * 1000L;
+constexpr auto MS_IN_NS = 1000L;
 
 Reanimator::Reanimator(useconds_t maxHeartBeatInterval, reanimate_callback_t reanimateFunc)
     : maxHeartBeatInterval(maxHeartBeatInterval), reanimateCallback(reanimateFunc),
@@ -29,7 +29,7 @@ int Reanimator::onHeartBeat()
 
 long Reanimator::getTimeStampUs()
 {
-  timespec ts;
+  timespec ts{};
   if (clock_gettime(CLOCK_MONOTONIC, &ts) == -1)
   {
     LOGV("Unable to get current time: %s!", strerror(errno));
@@ -46,9 +46,9 @@ bool Reanimator::isTooLate(long stamp)
 
 int Reanimator::start()
 {
-  __sync_bool_compare_and_swap(&shouldStop, 1, 0);
+  __sync_bool_compare_and_swap(&shouldStop, true, false);
   int createRetval;
-  if ((createRetval = pthread_create(&reanimatorThread, NULL, &reanimatorLoop, this)) != 0)
+  if ((createRetval = pthread_create(&reanimatorThread, nullptr, &reanimatorLoop, this)) != 0)
   {
     LOGV("Unable to create thread: %s!", strerror(createRetval));
     return createRetval;
@@ -59,7 +59,7 @@ int Reanimator::start()
 
 int Reanimator::stop()
 {
-  __sync_bool_compare_and_swap(&shouldStop, 0, 1);
+  __sync_bool_compare_and_swap(&shouldStop, false, true);
   if (reanimatorThread)
   {
     void* threadRetval;
@@ -81,8 +81,8 @@ Reanimator::~Reanimator()
 
 void* Reanimator::reanimatorLoop(void* param)
 {
-  Reanimator* cls = reinterpret_cast<Reanimator*>(param);
-  while (__sync_bool_compare_and_swap(&(cls->shouldStop), 0, 0))
+  auto* cls = reinterpret_cast<Reanimator*>(param);
+  while (__sync_bool_compare_and_swap(&(cls->shouldStop), false, false))
   {
     usleep(cls->checkInterval);
     long currentTimeStamp = getTimeStampUs();
@@ -101,5 +101,5 @@ void* Reanimator::reanimatorLoop(void* param)
     }
   }
 
-  return NULL;
+  return nullptr;
 }

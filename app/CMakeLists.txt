@@ -12,7 +12,6 @@ set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/main/cpp")
 set(DIRTY_SOURCES
     "${SRC_DIR}/native-lib.cpp"
     "${SRC_DIR}/utils/net_utils.c"
-    "${SRC_DIR}/utils/file_utils.c"
     )
 
 add_library(input_device STATIC

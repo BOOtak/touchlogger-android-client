@@ -1,6 +1,6 @@
 package org.leyfer.thesis.touchlogger_dirty.job;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.evernote.android.job.Job;
@@ -35,7 +35,7 @@ public class UploadJob extends Job {
     @Override
     protected Result onRunJob(@NonNull Params params) {
         if (logFilesDir.exists()) {
-            File fileList[] = logFilesDir.listFiles(new FilenameFilter() {
+            File[] fileList = logFilesDir.listFiles(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
                     return name.startsWith("data") && name.endsWith(".log");

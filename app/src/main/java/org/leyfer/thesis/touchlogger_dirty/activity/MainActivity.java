@@ -9,15 +9,13 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.FileObserver;
 import android.os.Handler;
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,11 +24,14 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 import org.leyfer.thesis.touchlogger_dirty.BuildConfig;
 import org.leyfer.thesis.touchlogger_dirty.R;
+import org.leyfer.thesis.touchlogger_dirty.adapter.PayloadViewAdapter;
 import org.leyfer.thesis.touchlogger_dirty.dialog.ErrorAlertDialog;
 import org.leyfer.thesis.touchlogger_dirty.event.PauseEvent;
 import org.leyfer.thesis.touchlogger_dirty.event.StatusEvent;
 import org.leyfer.thesis.touchlogger_dirty.exception.ManualInstallationException;
 import org.leyfer.thesis.touchlogger_dirty.status_control.StatusController;
+import org.leyfer.thesis.touchlogger_dirty.utils.Config;
+import org.leyfer.thesis.touchlogger_dirty.utils.file.FileListPoller;
 import org.leyfer.thesis.touchlogger_dirty.utils.file.FileUtils;
 
 import java.io.File;
@@ -38,11 +39,18 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.List;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import eu.chainfire.libsuperuser.Shell;
 
 import static org.leyfer.thesis.touchlogger_dirty.utils.Config.EXEC_PAYLOAD_NAME;
+import static org.leyfer.thesis.touchlogger_dirty.utils.Config.TOUCH_LOGGER_DIR;
 import static org.leyfer.thesis.touchlogger_dirty.utils.file.FileUtils.unpackAsset;
 
 public class MainActivity extends AppCompatActivity {
@@ -52,6 +60,35 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView statusTv;
     private Button togglePauseButton;
+    private PayloadViewAdapter payloadViewAdapter;
+
+    private final FileListPoller fileListPoller = new FileListPoller(new ArrayList<File>()) {
+        @Override
+        public void onFileRead(File readFile) {
+        }
+
+        @Override
+        public void onNewLine(final String newLine) {
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    Log.d(TAG, "add log line");
+                    payloadViewAdapter.addLogLine(newLine);
+
+                }
+            });
+        }
+    };
+
+    private FileObserver logFileObserver = new FileObserver(TOUCH_LOGGER_DIR.getAbsolutePath()) {
+        @Override
+        public void onEvent(int event, @Nullable String path) {
+            if (event == FileObserver.CREATE && Config.EXEC_PAYLOAD_LOG.equals(path)) {
+                Log.d(TAG, "Add new file to observer!");
+                fileListPoller.addNewFile(new File(TOUCH_LOGGER_DIR, Config.EXEC_PAYLOAD_LOG));
+            }
+        }
+    };
 
     private StatusEvent.Status currentStatus = StatusEvent.Status.STATUS_OFFLINE;
 
@@ -67,6 +104,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         TextView hello = findViewById(R.id.sample_text);
+        payloadViewAdapter = new PayloadViewAdapter(this);
+        ListView payloadLogView = findViewById(R.id.payloadLogView);
+        payloadLogView.setAdapter(payloadViewAdapter);
         hello.setText(R.string.science);
         TextView version = findViewById(R.id.version);
         version.setText(getString(R.string.version, BuildConfig.VERSION_NAME));
@@ -122,6 +162,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         checkSDCardPermission();
+        checkPayloadLogFile();
     }
 
     private String getStackTraceString(Exception e) {
@@ -242,6 +283,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void checkPayloadLogFile() {
+        File payloadLogFile = new File(TOUCH_LOGGER_DIR, Config.EXEC_PAYLOAD_LOG);
+        if (payloadLogFile.exists()) {
+            fileListPoller.addNewFile(payloadLogFile);
+        } else {
+            logFileObserver.startWatching();
+        }
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
@@ -288,6 +338,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         EventBus.getDefault().unregister(this);
+        Log.d(TAG, "Stop reading log file");
+        fileListPoller.stop();
+        payloadViewAdapter.clearLines();
         super.onPause();
     }
 
@@ -295,6 +348,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         EventBus.getDefault().register(this);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "Start reading log file");
+                fileListPoller.startReadingFiles();
+            }
+        }).start();
+    }
+
+    @Override
+    protected void onDestroy() {
+        logFileObserver.stopWatching();
+        super.onDestroy();
     }
 
     private void onPaused() {

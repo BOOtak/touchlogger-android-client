@@ -1,6 +1,7 @@
 package org.leyfer.thesis.touchlogger_dirty.utils.file;
 
 import androidx.annotation.NonNull;
+
 import android.util.Log;
 
 import org.leyfer.thesis.touchlogger_dirty.activity.MainActivity;
@@ -14,6 +15,7 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Reads set of files line by line, allows callers to add new files on the go
@@ -24,13 +26,19 @@ public abstract class FileListPoller {
     private static final int SLEEP_INTERVAL_MS = 100;
 
     private final Queue<File> fileQueue = new ConcurrentLinkedQueue<>();
+    private final AtomicBoolean shouldStop = new AtomicBoolean(false);
 
     public FileListPoller(@NonNull List<File> fileList) {
         fileQueue.addAll(fileList);
     }
 
+    public void stop() {
+        shouldStop.set(true);
+    }
+
     public void startReadingFiles() {
-        while (true) {
+        shouldStop.set(false);
+        while (!shouldStop.get()) {
             File currentFile = fileQueue.peek();
 
             if (currentFile == null) {
@@ -54,7 +62,7 @@ public abstract class FileListPoller {
                 continue;
             }
 
-            while (true) {
+            while (!shouldStop.get()) {
                 try {
                     String line = br.readLine();
                     if (line != null) {

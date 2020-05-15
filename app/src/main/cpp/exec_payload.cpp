@@ -285,6 +285,12 @@ int main(int argc, const char** argv)
     return -1;
   }
 
+  if (init_log_file(LOG_FILE) == -1) {
+    LOGV("Unable to setup log redirection to \"" LOG_FILE "\"!");
+  } else {
+    LOGV("Log redirect OK!");
+  }
+
   LOGV("Starting control server thread...");
   std::map<std::string, control_callback> callbackMap;
   callbackMap.emplace(pauseCommand, &onPause);

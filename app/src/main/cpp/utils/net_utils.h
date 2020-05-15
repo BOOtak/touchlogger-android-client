@@ -5,11 +5,7 @@
 #ifndef TOUCHLOGGER_DIRTY_NET_UTILS_H
 #define TOUCHLOGGER_DIRTY_NET_UTILS_H
 
-#ifdef __cplusplus
-#define API_METHOD extern "C"
-#else
-#define API_METHOD
-#endif
+#include <api_method.h>
 
 #define RESPONSE_OK "OK"
 #define RESPONSE_ERROR "Error!"

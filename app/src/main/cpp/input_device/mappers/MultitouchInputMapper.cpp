@@ -4,7 +4,7 @@
 
 #include <cstdio>
 #include "MultitouchInputMapper.h"
-#include "../../common/logging.h"
+#include <logging.h>
 
 
 MultiTouchInputMapper::MultiTouchInputMapper(InputDevice* device, EventFileWriter* fileWriter)

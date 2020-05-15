@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 #include "PointerCoords.h"
-#include "../../common/logging.h"
+#include <logging.h>
 
 void PointerCoords::applyOffset(float xOffset, float yOffset)
 {

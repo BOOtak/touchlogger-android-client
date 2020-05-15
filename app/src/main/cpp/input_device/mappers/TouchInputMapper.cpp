@@ -5,7 +5,7 @@
 #include <cstdio>
 #include <string>
 #include "TouchInputMapper.h"
-#include "../../common/logging.h"
+#include <logging.h>
 
 template<typename T>
 inline static void swap(T &a, T &b)

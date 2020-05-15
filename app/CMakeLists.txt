@@ -14,7 +14,12 @@ set(DIRTY_SOURCES
     "${SRC_DIR}/utils/net_utils.c"
     )
 
+set(COMMON_SOURCES
+    "${SRC_DIR}/common/logging.c"
+    )
+
 add_library(input_device STATIC
+    ${COMMON_SOURCES}
     "${SRC_DIR}/ControlReader.cpp"
     "${SRC_DIR}/utils/net_utils.c"
     "${SRC_DIR}/input_device/EventFileWriter.cpp"
@@ -32,11 +37,12 @@ add_library(input_device STATIC
     )
 
 target_include_directories(input_device PUBLIC
-    $<BUILD_INTERFACE:${SRC_DIR}/input_device>
-    $<INSTALL_INTERFACE:input_device>
-)
+    ${SRC_DIR}/input_device
+    ${SRC_DIR}/common
+    )
 
 add_library(touchlogger SHARED
+    ${COMMON_SOURCES}
     ${DIRTY_SOURCES}
     )
 
@@ -44,9 +50,17 @@ target_link_libraries(touchlogger
     PUBLIC log
     )
 
+target_include_directories(touchlogger PUBLIC
+    ${SRC_DIR}/common
+    )
+
 add_executable(exec_payload
     ${SRC_DIR}/exec_payload.cpp
     ${SRC_DIR}/utils/Reanimator.cpp
+    )
+
+target_include_directories(exec_payload PUBLIC
+    ${SRC_DIR}/common
     )
 
 target_link_libraries(exec_payload

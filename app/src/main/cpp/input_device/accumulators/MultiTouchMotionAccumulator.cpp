@@ -4,7 +4,7 @@
 
 #include <cstdio>
 #include "MultiTouchMotionAccumulator.h"
-#include "../../common/logging.h"
+#include <logging.h>
 
 MultiTouchMotionAccumulator::Slot::Slot()
 {

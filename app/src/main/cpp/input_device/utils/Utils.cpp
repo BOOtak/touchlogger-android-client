@@ -7,7 +7,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include "Utils.h"
-#include "../../common/logging.h"
+#include <logging.h>
 
 InputDevice* findTouchscreen()
 {

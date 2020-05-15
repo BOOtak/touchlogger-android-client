@@ -17,7 +17,7 @@ public class Config {
 
     // be sure to keep this in sync with native part
     public static final String INPUT_DATA_DIR =
-            new File(Environment.getExternalStorageDirectory().getPath(), "touch_logger")
+            new File(Environment.getExternalStorageDirectory().getPath(), "touch_logger/touch_data")
                     .getAbsolutePath();
 
     public static final String HEARTBEAT_COMMAND = "heartbeat";

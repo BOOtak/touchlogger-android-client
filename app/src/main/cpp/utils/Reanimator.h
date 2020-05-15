@@ -25,23 +25,23 @@ public:
 private:
   const useconds_t maxHeartBeatInterval;
 
+  const useconds_t checkInterval;
+
   const reanimate_callback_t reanimateCallback;
 
   bool shouldStop;
 
   pthread_t reanimatorThread;
 
-  volatile long lastHeartbeatTimeStamp;
-
-  const useconds_t checkInterval;
+  volatile uint64_t lastHeartbeatTimeStamp;
 
   /**
    * Get current monotonic clock timestamp in microseconds.
    * @return Current monotonic clock timestamp in microseconds.
    */
-  static long getTimeStampUs();
+  static uint64_t getTimeStampUs();
 
-  bool isTooLate(long stamp);
+  bool isTooLate(uint64_t stamp);
 
   static void* reanimatorLoop(void* param);
 };

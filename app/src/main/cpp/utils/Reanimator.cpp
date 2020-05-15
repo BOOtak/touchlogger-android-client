@@ -12,14 +12,16 @@
 #include "Reanimator.h"
 #include "../common/logging.h"
 
-constexpr auto MS_IN_SEC = 1000 * 1000L;
-constexpr auto MS_IN_NS = 1000L;
+constexpr auto US_IN_SEC = 1000LU * 1000LU;
+constexpr auto NS_IN_US = 1000LU;
 
 Reanimator::Reanimator(useconds_t maxHeartBeatInterval, reanimate_callback_t reanimateFunc)
     : maxHeartBeatInterval(maxHeartBeatInterval), reanimateCallback(reanimateFunc),
       checkInterval(maxHeartBeatInterval / 2), lastHeartbeatTimeStamp(0), shouldStop(false),
       reanimatorThread(NULL)
-{}
+{
+  lastHeartbeatTimeStamp = getTimeStampUs();
+}
 
 int Reanimator::onHeartBeat()
 {
@@ -27,7 +29,7 @@ int Reanimator::onHeartBeat()
   return 0;
 }
 
-long Reanimator::getTimeStampUs()
+uint64_t Reanimator::getTimeStampUs()
 {
   timespec ts{};
   if (clock_gettime(CLOCK_MONOTONIC, &ts) == -1)
@@ -36,10 +38,10 @@ long Reanimator::getTimeStampUs()
     return 0;
   }
 
-  return ts.tv_sec * MS_IN_SEC + ts.tv_nsec / MS_IN_NS;
+  return ts.tv_sec * US_IN_SEC + ts.tv_nsec / NS_IN_US;
 }
 
-bool Reanimator::isTooLate(long stamp)
+bool Reanimator::isTooLate(uint64_t stamp)
 {
   return lastHeartbeatTimeStamp > 0 && stamp > lastHeartbeatTimeStamp + maxHeartBeatInterval * 2;
 }
@@ -85,10 +87,10 @@ void* Reanimator::reanimatorLoop(void* param)
   while (__sync_bool_compare_and_swap(&(cls->shouldStop), false, false))
   {
     usleep(cls->checkInterval);
-    long currentTimeStamp = getTimeStampUs();
+    uint64_t currentTimeStamp = getTimeStampUs();
     if (cls->isTooLate(currentTimeStamp))
     {
-      LOGV("There is no info from service for more than %li us, reanimating it!",
+      LOGV("There is no info from service for more than %llu us, reanimating it!",
            currentTimeStamp - cls->lastHeartbeatTimeStamp);
       if (cls->reanimateCallback() == -1)
       {

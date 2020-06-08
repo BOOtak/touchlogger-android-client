@@ -20,7 +20,8 @@ set(COMMON_SOURCES
 
 add_library(input_device STATIC
         ${COMMON_SOURCES}
-        "${SRC_DIR}/ControlReader.cpp"
+        "${SRC_DIR}/BaseControlReader.cpp"
+        "${SRC_DIR}/TCPControlReader.cpp"
         "${SRC_DIR}/utils/net_utils.c"
         "${SRC_DIR}/input_device/EventFileWriter.cpp"
         "${SRC_DIR}/input_device/TestEventFileWriter.cpp"

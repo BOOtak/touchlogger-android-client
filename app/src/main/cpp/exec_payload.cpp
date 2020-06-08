@@ -16,7 +16,7 @@
 #include <EventFileWriter.h>
 #include "common/logging.h"
 #include "input_device/InputReader.h"
-#include "ControlReader.h"
+#include "TCPControlReader.h"
 #include "utils/Reanimator.h"
 
 typedef int getcon_t(char** con);
@@ -296,7 +296,7 @@ int main(int argc, const char** argv)
   callbackMap.emplace(pauseCommand, &onPause);
   callbackMap.emplace(resumeCommand, &onResume);
   callbackMap.emplace(heartbeatCommand, &onHeartBeat);
-  auto* controlReader = new ControlReader(CONTROL_PORT, callbackMap);
+  auto* controlReader = new TCPControlReader(CONTROL_PORT, callbackMap);
   controlReader->start();
 
   if (startServiceAndWaitForItToBecomeOnline() == -1)

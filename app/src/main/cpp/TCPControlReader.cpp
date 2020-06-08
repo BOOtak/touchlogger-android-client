@@ -8,19 +8,14 @@
 #include <unistd.h>
 #include <cstring>
 #include <utility>
-#include "ControlReader.h"
+#include "TCPControlReader.h"
 #include "common/logging.h"
 
-ControlReader::ControlReader(int port, std::map<std::string, control_callback> commands)
-    : port(port), commands(std::move(commands)), sockFd(-1), shouldStop(0)
+TCPControlReader::TCPControlReader(int port, std::map<std::string, control_callback> commands)
+    : BaseControlReader(commands), port(port), sockFd(-1)
 {}
 
-void ControlReader::start()
-{
-  startServerThread();
-}
-
-int ControlReader::startServerThread()
+int TCPControlReader::startServerThread()
 {
   pthread_t server_thread = -1;
   int res = pthread_create(&server_thread, nullptr, &serverRoutine, (void*) this);
@@ -34,9 +29,9 @@ int ControlReader::startServerThread()
   return 0;
 }
 
-void* ControlReader::serverRoutine(void* instance)
+void* TCPControlReader::serverRoutine(void* instance)
 {
-  auto* cls = reinterpret_cast<ControlReader*>(instance);
+  auto* cls = reinterpret_cast<TCPControlReader*>(instance);
 
   int sock_fd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0);
   if (sock_fd == -1)
@@ -95,11 +90,11 @@ void* ControlReader::serverRoutine(void* instance)
   return nullptr;
 }
 
-void* ControlReader::connectionRoutine(void* args)
+void* TCPControlReader::connectionRoutine(void* args)
 {
   auto* cArgs = static_cast<ConnectionRoutineArgs*>(args);
   int connection = cArgs->getAcceptedConnection();
-  ControlReader* cls = cArgs->getControlReaderInstance();
+  TCPControlReader* cls = cArgs->getControlReaderInstance();
   const size_t commandLength = 1024;
   char commandBuffer[commandLength];
   char c;
@@ -152,7 +147,7 @@ void* ControlReader::connectionRoutine(void* args)
     {
       LOGV("Unable to read data: %s!", strerror(errno));
       close(connection);
-      delete(cArgs);
+      delete (cArgs);
       return nullptr;
     }
     else
@@ -162,11 +157,6 @@ void* ControlReader::connectionRoutine(void* args)
   }
 
   close(connection);
-  delete(cArgs);
+  delete (cArgs);
   return nullptr;
-}
-
-void ControlReader::stop()
-{
-  __sync_bool_compare_and_swap(&shouldStop, 0, 1);
 }

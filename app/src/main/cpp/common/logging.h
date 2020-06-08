@@ -17,7 +17,7 @@ API_METHOD int init_log_file(const char* path);
 API_METHOD void log_to_file(const char* format, ...);
 
 #define LOGV(...) {\
-  __android_log_print(ANDROID_LOG_INFO, "dirtycopy", __VA_ARGS__);\
+  __android_log_print(ANDROID_LOG_INFO, "touchlogger-native", __VA_ARGS__);\
   printf(__VA_ARGS__);\
   printf("\n");\
   fflush(stdout);\
